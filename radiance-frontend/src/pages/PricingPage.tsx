@@ -1,5 +1,4 @@
 import PageLayout from "../components/layout/PageLayout";
-import Navbar from "../components/layout/Navbar";
 import PricingSection from "../components/pricing/PricingSection";
 import BottomBar from "../components/hero/BottomBar";
 import { heroContent } from "../constants/hero";
