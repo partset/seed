@@ -31,7 +31,7 @@ export default function HtmlPlayground() {
   }
 
   return (
-    <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-5 pb-14 pt-28 sm:px-8 lg:px-10">
+    <section className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-5 pb-14 pt-12 sm:px-8 lg:px-10">
       <div className="max-w-3xl">
         <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-primary)]">
           Playground

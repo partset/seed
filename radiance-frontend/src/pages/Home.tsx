@@ -1,13 +1,12 @@
-import Navbar from "../components/layout/Navbar";
+import PageLayout from "../components/layout/PageLayout";
 import HeroSection from "../components/hero/HeroSection";
-import { heroContent } from "../constants/hero";
 import LogoCarousel from "../components/sections/LogoCarousel";
 import BottomBar from "../components/hero/BottomBar";
+import { heroContent } from "../constants/hero";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-background-dark text-foreground">
-      <Navbar links={heroContent.navLinks} />
+    <PageLayout>
       <HeroSection />
       <LogoCarousel />
       <BottomBar
@@ -17,6 +16,6 @@ export default function Home() {
         copyright={heroContent.footer.copyright}
         socialLinks={heroContent.footer.socialLinks}
       />
-    </main>
+    </PageLayout>
   );
 }
