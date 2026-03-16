@@ -1,16 +1,15 @@
 @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@300;400;500&display=swap");
 @import "tailwindcss";
 
-@theme {
-  --color-primary: #c8b89a;
-  --color-cream: #e8e2d8;
-  --color-background-dark: #0a0a0a;
-  --color-foreground: #f0ece4;
-  --color-muted: rgba(240, 236, 228, 0.4);
-
-  --font-display: "Bebas Neue", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
-}
+:root {
+    --color-primary: #c8b89a;                  /* TEST part color */
+    --color-background-dark: #0a0a0a;           /* Main background color */
+    --color-foreground: #f0ece4;                /* Main text color */
+    --color-muted: rgba(240, 236, 228, 0.4);   /* Muted text color with opacity */
+  
+    --font-display: "Bebas Neue", sans-serif;
+    --font-mono: "IBM Plex Mono", monospace;
+  }
 
 @layer base {
   *,
