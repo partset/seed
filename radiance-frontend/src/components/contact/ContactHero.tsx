@@ -8,7 +8,7 @@ export default function ContactHero()
         {CONTACT_INFO.eyebrow}
       </p>
 
-      <h1 className="text-4xl font-semibold leading-tight text-foreground md:text-5xl">
+      <h1 className="text-5xl leading-[0.95] font-semibold text-foreground sm:text-6xl lg:text-7xl">
         {CONTACT_INFO.title}
       </h1>
 

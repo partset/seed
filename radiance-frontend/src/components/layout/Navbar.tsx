@@ -9,8 +9,8 @@ type NavbarProps = {
 
 export default function Navbar({ links, pricingLink }: NavbarProps) {
   return (
-    <nav className="fixed left-0 right-0 top-0 z-[100] px-5 py-[18px] sm:px-9 sm:py-7">
-      <div className="relative flex flex-col items-center gap-4 sm:block">
+    <nav className="relative z-[100] bg-background-dark/95 px-5 py-5 backdrop-blur sm:px-7 lg:fixed lg:left-0 lg:right-0 lg:top-0 lg:px-9 lg:py-7">
+      <div className="relative flex flex-col items-center gap-4 lg:block">
         <ul className="animate-fade-in-delayed flex list-none flex-wrap items-center justify-center gap-6 sm:gap-11">
           {links.map((link) => (
             <li key={link.label}>
@@ -19,7 +19,7 @@ export default function Navbar({ links, pricingLink }: NavbarProps) {
           ))}
         </ul>
 
-        <div className="sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
+        <div className="lg:absolute lg:right-0 lg:top-1/2 lg:-translate-y-1/2">
           <CTAButton
             label={pricingLink.label}
             href={pricingLink.href}
