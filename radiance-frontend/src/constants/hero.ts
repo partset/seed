@@ -18,9 +18,9 @@ export type FooterLink = {
 
 export const heroContent = {
   navLinks: [
-    { label: "Home", href: "#" },
+    { label: "Home", href: "/" },
     { label: "Service", href: "#" },
-    { label: "Play", href: "#" },
+    { label: "Play", href: "/play" },
     { label: "Contact", href: "#" },
     { label: "Mission", href: "#" },
   ] satisfies NavLink[],
