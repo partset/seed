@@ -21,7 +21,7 @@ export const heroContent = {
     { label: "Home", href: "/" },
     { label: "Service", href: "#" },
     { label: "Play", href: "/play" },
-    { label: "Contact", href: "#" },
+    { label: "Contact", href: "/contact" },
     { label: "Mission", href: "#" },
   ] satisfies NavLink[],
 
