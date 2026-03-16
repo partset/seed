@@ -4,7 +4,6 @@ import Tagline from "./Tagline";
 import HeroLetters from "./HeroLetters";
 import StatsRow from "./StatsRow";
 import CTAButton from "./CTAButton";
-import BottomBar from "./BottomBar";
 
 export default function HeroSection() {
   const { sideLabel, tagline, heroWord, stats, cta, footer } = heroContent;
@@ -20,14 +19,6 @@ export default function HeroSection() {
       <HeroLetters word={heroWord} />
       <StatsRow stats={stats} />
       <CTAButton label={cta.label} href={cta.href} />
-
-      <BottomBar
-        location={footer.location}
-        timezone={footer.timezone}
-        centerLinks={footer.centerLinks}
-        copyright={footer.copyright}
-        socialLinks={footer.socialLinks}
-      />
     </section>
   );
 }
