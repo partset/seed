@@ -25,6 +25,11 @@ export const heroContent = {
     { label: "Mission", href: "#" },
   ] satisfies NavLink[],
 
+  pricingLink: {
+    label: "Pricing",
+    href: "/pricing",
+  } satisfies NavLink,
+
   sideLabel: {
     leftText: "Your Marketing Agency",
     rightText: "Social Media Strategy & Business Consultation",
