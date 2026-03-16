@@ -18,7 +18,7 @@ export default function BottomBar({
   socialLinks,
 }: BottomBarProps) {
   return (
-    <div className="animate-fade-in-bottom absolute bottom-8 left-5 right-5 z-[2] flex flex-wrap items-end justify-between gap-3 sm:left-9 sm:right-9">
+    <div className="animate-fade-in-bottom relative z-[2] flex flex-wrap items-end justify-between gap-3 border-t border-white/10 px-5 py-8 sm:px-9">
       <div className="flex flex-col gap-1">
         <LiveClock timezone={timezone} />
         <span className="text-[14px] uppercase tracking-[0.15em] text-foreground/30">
@@ -26,7 +26,7 @@ export default function BottomBar({
         </span>
       </div>
 
-      <div className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-2.5 lg:flex">
+      <div className="hidden items-center gap-2.5 lg:flex">
         {centerLinks.map((link, index) => (
           <div key={link.label} className="flex items-center gap-2.5">
             <FooterNavLink label={link.label} href={link.href} />
