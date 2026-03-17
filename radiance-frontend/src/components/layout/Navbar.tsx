@@ -7,11 +7,12 @@ type NavbarProps = {
   pricingLink: NavLink;
 };
 
-export default function Navbar({ links, pricingLink }: NavbarProps) {
+export default function Navbar({ links, pricingLink }: NavbarProps)
+{
   return (
-    <nav className="fixed left-0 right-0 top-0 z-[100] px-5 py-[18px] sm:px-9 sm:py-7">
-      <div className="relative flex flex-col items-center gap-4 sm:block">
-        <ul className="animate-fade-in-delayed flex list-none flex-wrap items-center justify-center gap-6 sm:gap-11">
+    <nav className="relative z-[100] bg-background-dark/95 px-5 py-3 backdrop-blur sm:px-7 lg:fixed lg:left-0 lg:right-0 lg:top-0 lg:px-9 lg:py-7">
+      <div className="relative flex flex-col items-center gap-1 lg:block">
+        <ul className="animate-fade-in-delayed flex list-none flex-wrap items-center justify-center gap-x-6 gap-y-3 sm:gap-x-8 lg:gap-11">
           {links.map((link) => (
             <li key={link.label}>
               <NavbarLink label={link.label} href={link.href} />
@@ -19,11 +20,11 @@ export default function Navbar({ links, pricingLink }: NavbarProps) {
           ))}
         </ul>
 
-        <div className="sm:absolute sm:right-0 sm:top-1/2 sm:-translate-y-1/2">
+        <div className="lg:absolute lg:right-0 lg:top-1/2 lg:mt-0 lg:-translate-y-1/2">
           <CTAButton
             label={pricingLink.label}
             href={pricingLink.href}
-            className="px-6 py-2.5 text-[12px] tracking-[0.18em]"
+            className="px-6 py-2 text-[12px] tracking-[0.18em]"
           />
         </div>
       </div>

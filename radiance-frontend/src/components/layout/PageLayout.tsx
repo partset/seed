@@ -14,7 +14,7 @@ export default function PageLayout({ children }: PageLayoutProps) {
         pricingLink={heroContent.pricingLink}
       />
 
-      <div className="pt-32 sm:pt-24">{children}</div>
+      <div className="pt-10 sm:pt-24">{children}</div>
     </main>
   );
 }
