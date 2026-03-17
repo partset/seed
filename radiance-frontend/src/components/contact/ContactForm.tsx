@@ -21,8 +21,7 @@ export default function ContactForm() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [submitError, setSubmitError] = useState("");
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) =>
-  {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
 
     setFormData((prev) => ({
@@ -31,8 +30,7 @@ export default function ContactForm() {
     }));
   };
 
-  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) =>
-  {
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const { name, value } = e.target;
 
     setFormData((prev) => ({
@@ -41,8 +39,7 @@ export default function ContactForm() {
     }));
   };
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) =>
-  {
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const { name, value } = e.target;
 
     setFormData((prev) => ({
@@ -51,28 +48,22 @@ export default function ContactForm() {
     }));
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) =>
-  {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setSubmitError("");
     setIsSubmitted(false);
     setIsSubmitting(true);
 
-    try
-    {
+    try {
       console.log("Contact form submitted:", formData);
 
       await new Promise((resolve) => setTimeout(resolve, 800));
 
       setIsSubmitted(true);
       setFormData(initialFormData);
-    }
-    catch
-    {
+    } catch {
       setSubmitError("Something went wrong. Please try again.");
-    }
-    finally
-    {
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -144,25 +135,28 @@ export default function ContactForm() {
             </label>
 
             <select
-                id="projectType"
-                name="projectType"
-                value={formData.projectType}
-                onChange={handleSelectChange}
-                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-white/10"
-                >
-                <option value="" className="bg-background-dark text-foreground">
-                    Select a project type
-                </option>
+              id="projectType"
+              name="projectType"
+              value={formData.projectType}
+              onChange={handleSelectChange}
+              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-white/10"
+            >
+              <option
+                value=""
+                className="bg-[var(--color-background-dark)] text-[var(color-foreground)]"
+              >
+                Select a project type
+              </option>
 
-                {PROJECT_TYPE_OPTIONS.map((option) => (
-                    <option
-                    key={option}
-                    value={option}
-                    className="bg-background-dark text-foreground"
-                    >
-                    {option}
-                    </option>
-                ))}
+              {PROJECT_TYPE_OPTIONS.map((option) => (
+                <option
+                  key={option}
+                  value={option}
+                  className="bg-[var(--color-background-dark)] text-[var(color-foreground)]"
+                >
+                  {option}
+                </option>
+              ))}
             </select>
           </div>
         </div>
@@ -188,18 +182,19 @@ export default function ContactForm() {
             className="mt-1 h-4 w-4 rounded border border-white/20 bg-white/5"
           />
           <span>
-            I agree to the collection of my information for the purpose of responding
-            to this inquiry.
+            I agree to the collection of my information for the purpose of
+            responding to this inquiry.
           </span>
         </label>
 
         <div className="flex flex-col gap-3">
-            <button
-                type="submit"
-                disabled={isSubmitting}
-                className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-primary/20 bg-primary px-6 py-3 text-sm font-semibold text-background-dark transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60">
-                {isSubmitting ? "Submitting..." : "Send Inquiry"}
-            </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="inline-flex min-h-12 w-full items-center justify-center rounded-2xl border border-primary/20 bg-primary px-6 py-3 text-sm font-semibold text-background-dark transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? "Submitting..." : "Send Inquiry"}
+          </button>
 
           {isSubmitted && (
             <p className="text-sm text-green-400">
@@ -207,11 +202,7 @@ export default function ContactForm() {
             </p>
           )}
 
-          {submitError && (
-            <p className="text-sm text-red-400">
-              {submitError}
-            </p>
-          )}
+          {submitError && <p className="text-sm text-red-400">{submitError}</p>}
         </div>
       </form>
     </div>
