@@ -144,18 +144,25 @@ export default function ContactForm() {
             </label>
 
             <select
-              id="projectType"
-              name="projectType"
-              value={formData.projectType}
-              onChange={handleSelectChange}
-              className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-white/10"
-            >
-              <option value="">Select a project type</option>
-              {PROJECT_TYPE_OPTIONS.map((option) => (
-                <option key={option} value={option} className="bg-background-dark">
-                  {option}
+                id="projectType"
+                name="projectType"
+                value={formData.projectType}
+                onChange={handleSelectChange}
+                className="w-full rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:bg-white/10"
+                >
+                <option value="" className="bg-background-dark text-foreground">
+                    Select a project type
                 </option>
-              ))}
+
+                {PROJECT_TYPE_OPTIONS.map((option) => (
+                    <option
+                    key={option}
+                    value={option}
+                    className="bg-background-dark text-foreground"
+                    >
+                    {option}
+                    </option>
+                ))}
             </select>
           </div>
         </div>

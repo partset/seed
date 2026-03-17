@@ -4,9 +4,6 @@ export default function ContactHero()
 {
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm font-semibold uppercase tracking-[0.2em] text-primary">
-        {CONTACT_INFO.eyebrow}
-      </p>
 
       <h1 className="text-5xl leading-[0.95] font-semibold text-foreground sm:text-6xl lg:text-7xl">
         {CONTACT_INFO.title}
