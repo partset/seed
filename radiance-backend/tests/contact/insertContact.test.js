@@ -19,6 +19,8 @@ describe("POST /api/contact/insert", () => {
       lastName: "Pham",
       email: "alex@example.com",
       phone: "1234567890",
+      companyName: "Radiance",
+      projectType: "Web App",
       message: "Hello, I am interested in your services.",
     });
 
@@ -35,6 +37,8 @@ describe("POST /api/contact/insert", () => {
       "Pham",
       "alex@example.com",
       "1234567890",
+      "Radiance",
+      "web app",
       "Hello, I am interested in your services.",
     ]);
   });
@@ -44,6 +48,8 @@ describe("POST /api/contact/insert", () => {
       lastName: "Pham",
       email: "alex@example.com",
       phone: "1234567890",
+      companyName: "Radiance",
+      projectType: "Web App",
       message: "Hello",
     });
 
@@ -62,6 +68,8 @@ describe("POST /api/contact/insert", () => {
       firstName: "Alex",
       email: "alex@example.com",
       phone: "1234567890",
+      companyName: "Radiance",
+      projectType: "Web App",
       message: "Hello",
     });
 
@@ -80,6 +88,8 @@ describe("POST /api/contact/insert", () => {
       firstName: "Alex",
       lastName: "Pham",
       phone: "1234567890",
+      companyName: "Radiance",
+      projectType: "Web App",
       message: "Hello",
     });
 
@@ -98,6 +108,8 @@ describe("POST /api/contact/insert", () => {
       firstName: "Alex",
       lastName: "Pham",
       email: "alex@example.com",
+      companyName: "Radiance",
+      projectType: "Web App",
       message: "Hello",
     });
 
@@ -117,6 +129,8 @@ describe("POST /api/contact/insert", () => {
       lastName: "Pham",
       email: "alex@example.com",
       phone: "12345",
+      companyName: "Radiance",
+      projectType: "Web App",
       message: "Hello",
     });
 
@@ -130,12 +144,54 @@ describe("POST /api/contact/insert", () => {
     expect(db.query).not.toHaveBeenCalled();
   });
 
+  it("should return 400 when companyName is missing", async () => {
+    const response = await request(app).post("/api/contact/insert").send({
+      firstName: "Alex",
+      lastName: "Pham",
+      email: "alex@example.com",
+      phone: "1234567890",
+      projectType: "Web App",
+      message: "Hello",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      success: false,
+      data: {},
+      error: "Invalid Company Name",
+    });
+
+    expect(db.query).not.toHaveBeenCalled();
+  });
+
+  it("should return 400 when projectType is missing", async () => {
+    const response = await request(app).post("/api/contact/insert").send({
+      firstName: "Alex",
+      lastName: "Pham",
+      email: "alex@example.com",
+      phone: "1234567890",
+      companyName: "Radiance",
+      message: "Hello",
+    });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      success: false,
+      data: {},
+      error: "Invalid Project Type",
+    });
+
+    expect(db.query).not.toHaveBeenCalled();
+  });
+
   it("should return 400 when message is missing", async () => {
     const response = await request(app).post("/api/contact/insert").send({
       firstName: "Alex",
       lastName: "Pham",
       email: "alex@example.com",
       phone: "1234567890",
+      companyName: "Radiance",
+      projectType: "Web App",
     });
 
     expect(response.status).toBe(400);
@@ -148,6 +204,32 @@ describe("POST /api/contact/insert", () => {
     expect(db.query).not.toHaveBeenCalled();
   });
 
+  it("should clean phone number before inserting", async () => {
+    db.query.mockResolvedValueOnce({ rows: [] });
+
+    const response = await request(app).post("/api/contact/insert").send({
+      firstName: "Alex",
+      lastName: "Pham",
+      email: "alex@example.com",
+      phone: "(123) 456-7890",
+      companyName: "Radiance",
+      projectType: "Web App",
+      message: "Hello",
+    });
+
+    expect(response.status).toBe(201);
+
+    expect(db.query).toHaveBeenCalledWith(expect.any(String), [
+      "Alex",
+      "Pham",
+      "alex@example.com",
+      "1234567890",
+      "Radiance",
+      "web app",
+      "Hello",
+    ]);
+  });
+
   it("should return 500 when database query fails", async () => {
     db.query.mockRejectedValueOnce(new Error("Database failure"));
 
@@ -156,6 +238,8 @@ describe("POST /api/contact/insert", () => {
       lastName: "Pham",
       email: "alex@example.com",
       phone: "1234567890",
+      companyName: "Radiance",
+      projectType: "Web App",
       message: "Hello, I am interested.",
     });
 

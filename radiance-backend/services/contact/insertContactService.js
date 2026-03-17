@@ -6,6 +6,8 @@ async function insertContactService({
   lastName,
   email,
   phone,
+  companyName,
+  projectType,
   message,
 }) {
   await db.query(insertContactQuery.insertContact, [
@@ -13,6 +15,8 @@ async function insertContactService({
     lastName.trim(),
     email.trim().toLowerCase(),
     phone,
+    companyName.trim(),
+    projectType.trim().toLowerCase(),
     message.trim(),
   ]);
 

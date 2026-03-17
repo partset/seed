@@ -1,5 +1,13 @@
 function validateInsertContact(req, res, next) {
-  const { firstName, lastName, email, phone, message } = req.body;
+  const {
+    firstName,
+    lastName,
+    email,
+    phone,
+    companyName,
+    projectType,
+    message,
+  } = req.body;
 
   if (!firstName?.trim()) {
     return res.status(400).json({
@@ -31,6 +39,22 @@ function validateInsertContact(req, res, next) {
       success: false,
       data: {},
       error: "Invalid Phone Number",
+    });
+  }
+
+  if (!companyName?.trim()) {
+    return res.status(400).json({
+      success: false,
+      data: {},
+      error: "Invalid Company Name",
+    });
+  }
+
+  if (!projectType?.trim()) {
+    return res.status(400).json({
+      success: false,
+      data: {},
+      error: "Invalid Project Type",
     });
   }
 
