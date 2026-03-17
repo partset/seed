@@ -2,14 +2,18 @@
 @import "tailwindcss";
 
 :root {
-    --color-primary: #c8b89a;                   /* TEST part color */
-    --color-background-dark: #0a0a0a;           /* Main background color */
-    --color-foreground: #f0ece4;                /* Main text color */
-    --color-muted: rgba(240, 236, 228, 0.4);    /* Muted text color with opacity */
-  
-    --font-display: "Bebas Neue", sans-serif;
-    --font-mono: "IBM Plex Mono", monospace;
-  }
+  --color-primary: #c8b89a; /* TEST part color */
+  --color-background-dark: #0a0a0a; /* Main background color */
+  --color-foreground: #f0ece4; /* Main text color */
+  --color-muted: rgba(240, 236, 228, 0.4); /* Muted text color with opacity */
+
+  --color-success: #86efac;
+  --color-error: #fca5a5;
+  --color-error-border: rgba(252, 165, 165, 0.5);
+
+  --font-display: "Bebas Neue", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+}
 
 @layer base {
   *,
@@ -132,33 +136,33 @@
 
 /* Logo Carousel */
 .logo-fade-mask {
-    mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      white 12%,
-      white 88%,
-      transparent 100%
-    );
-    -webkit-mask-image: linear-gradient(
-      to right,
-      transparent 0%,
-      white 12%,
-      white 88%,
-      transparent 100%
-    );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    white 12%,
+    white 88%,
+    transparent 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0%,
+    white 12%,
+    white 88%,
+    transparent 100%
+  );
+}
+
+.logo-track {
+  animation: logo-marquee 24s linear infinite;
+  will-change: transform;
+}
+
+@keyframes logo-marquee {
+  from {
+    transform: translateX(0);
   }
-  
-  .logo-track {
-    animation: logo-marquee 24s linear infinite;
-    will-change: transform;
+
+  to {
+    transform: translateX(-50%);
   }
-  
-  @keyframes logo-marquee {
-    from {
-      transform: translateX(0);
-    }
-  
-    to {
-      transform: translateX(-50%);
-    }
-  }
+}
