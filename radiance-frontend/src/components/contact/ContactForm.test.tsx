@@ -1,9 +1,18 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import ContactForm from "./ContactForm";
+import { submitContact } from "../../services/api/contacts/submit/api";
+
+vi.mock("../../services/api/contacts/submit/api", () => ({
+  submitContact: vi.fn(),
+}));
 
 describe("ContactForm", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("shows required validation errors on empty submit", async () => {
     const user = userEvent.setup();
     render(<ContactForm />);
@@ -60,8 +69,13 @@ describe("ContactForm", () => {
   });
 
   it("submits successfully when all required fields are valid", async () => {
-    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
     const user = userEvent.setup();
+
+    vi.mocked(submitContact).mockResolvedValue({
+      success: true,
+      data: { contactId: "123" },
+      error: "",
+    });
 
     render(<ContactForm />);
 
@@ -89,17 +103,16 @@ describe("ContactForm", () => {
 
     await user.click(screen.getByRole("button", { name: /send inquiry/i }));
 
-    expect(screen.getByRole("button", { name: /submitting/i })).toBeDisabled();
-
-    expect(consoleSpy).toHaveBeenCalledWith("Contact form submitted:", {
-      firstName: "Alex",
-      lastName: "Pham",
-      email: "alex@example.com",
-      phone: "(555) 123-4567",
-      company: "Seed",
-      projectType: "Landing Page",
-      message: "I need a landing page for my company.",
-      consent: true,
+    await waitFor(() => {
+      expect(submitContact).toHaveBeenCalledWith({
+        firstName: "Alex",
+        lastName: "Pham",
+        email: "alex@example.com",
+        phone: "(555) 123-4567",
+        companyName: "Seed",
+        projectType: "Landing Page",
+        message: "I need a landing page for my company.",
+      });
     });
 
     expect(
@@ -107,7 +120,5 @@ describe("ContactForm", () => {
         "Your inquiry has been submitted. We will get back to you soon.",
       ),
     ).toBeInTheDocument();
-
-    consoleSpy.mockRestore();
-  }, 10000);
+  });
 });

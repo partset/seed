@@ -4,6 +4,7 @@ import ContactTextarea from "./ContactTextarea";
 import type { ContactFormData } from "../../types/contact";
 import { PROJECT_TYPE_OPTIONS } from "../../constants/contact";
 import ContactSelect from "./ContactSelect";
+import { submitContact } from "../../services/api/contacts/submit/api";
 import {
   formatUsPhoneNumber,
   validateContactField,
@@ -116,15 +117,21 @@ export default function ContactForm() {
     setIsSubmitting(true);
 
     try {
-      console.log("Contact form submitted:", formData);
-
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await submitContact({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        companyName: formData.company,
+        projectType: formData.projectType,
+        message: formData.message,
+      });
 
       setIsSubmitted(true);
       setFormData(initialFormData);
       setTouched(initialTouchedState);
       setErrors({});
-    } catch {
+    } catch (err) {
       setSubmitError("Something went wrong. Please try again.");
     } finally {
       setIsSubmitting(false);
