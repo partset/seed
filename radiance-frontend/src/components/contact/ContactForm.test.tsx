@@ -2,10 +2,10 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import ContactForm from "./ContactForm";
-import { submitContact } from "../../services/api/contacts/submit/api";
+import { submitLead } from "../../services/api/lead/submit/api";
 
-vi.mock("../../services/api/contacts/submit/api", () => ({
-  submitContact: vi.fn(),
+vi.mock("../../services/api/leads/submit/api", () => ({
+  submitLead: vi.fn(),
 }));
 
 describe("ContactForm", () => {
@@ -71,9 +71,9 @@ describe("ContactForm", () => {
   it("submits successfully when all required fields are valid", async () => {
     const user = userEvent.setup();
 
-    vi.mocked(submitContact).mockResolvedValue({
+    vi.mocked(submitLead).mockResolvedValue({
       success: true,
-      data: { contactId: "123" },
+      data: { leadId: "123" },
       error: "",
     });
 
@@ -104,7 +104,7 @@ describe("ContactForm", () => {
     await user.click(screen.getByRole("button", { name: /send inquiry/i }));
 
     await waitFor(() => {
-      expect(submitContact).toHaveBeenCalledWith({
+      expect(submitLead).toHaveBeenCalledWith({
         firstName: "Alex",
         lastName: "Pham",
         email: "alex@example.com",
