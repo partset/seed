@@ -1,4 +1,4 @@
-function validateInsertContact(req, res, next) {
+function validateInsertLead(req, res, next) {
   const {
     firstName,
     lastName,
@@ -70,4 +70,4 @@ function validateInsertContact(req, res, next) {
   next();
 }
 
-module.exports = { validateInsertContact };
+module.exports = { validateInsertLead };
