@@ -4,7 +4,7 @@ import ContactTextarea from "./ContactTextarea";
 import type { ContactFormData } from "../../types/contact";
 import { PROJECT_TYPE_OPTIONS } from "../../constants/contact";
 import ContactSelect from "./ContactSelect";
-import { submitContact } from "../../services/api/contacts/submit/api";
+import { submitLead } from "../../services/api/lead/submit/api";
 import {
   formatUsPhoneNumber,
   validateContactField,
@@ -117,7 +117,7 @@ export default function ContactForm() {
     setIsSubmitting(true);
 
     try {
-      await submitContact({
+      await submitLead({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,

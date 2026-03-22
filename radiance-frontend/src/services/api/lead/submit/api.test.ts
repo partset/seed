@@ -1,4 +1,4 @@
-import { submitContact } from "./api";
+import { submitLead } from "./api";
 
 const mockFetch = vi.fn();
 
@@ -11,17 +11,17 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("submitContact", () => {
+describe("submitLead", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("submits contact data successfully", async () => {
+  it("submits lead data successfully", async () => {
     mockFetch.mockResolvedValue({
       ok: true,
       json: async () => ({
         success: true,
-        data: { contactId: "123" },
+        data: { leadId: "123" },
         error: "",
       }),
     });
@@ -36,11 +36,11 @@ describe("submitContact", () => {
       message: "I need a landing page for my business.",
     };
 
-    const result = await submitContact(payload);
+    const result = await submitLead(payload);
 
     expect(fetch).toHaveBeenCalledTimes(1);
     expect(fetch).toHaveBeenCalledWith(
-      expect.stringContaining("/api/contact/insert"),
+      expect.stringContaining("/api/lead/insert"),
       expect.objectContaining({
         method: "POST",
         headers: {
@@ -68,7 +68,7 @@ describe("submitContact", () => {
     });
 
     await expect(
-      submitContact({
+      submitLead({
         firstName: "Alex",
         lastName: "Pham",
         email: "alex@example.com",
