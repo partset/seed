@@ -1,9 +1,27 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import LeadDetailsCard from "../../components/admin/leads/LeadDetailsCard";
+import LeadEditForm, {
+  type LeadEditFormValues,
+} from "../../components/admin/leads/LeadEditForm";
 import { useAdminAuth } from "../../hooks/useAdminAuth";
 import { getLead } from "../../services/api/lead/getLead/api";
+import { modifyLead } from "../../services/api/lead/modifyLead/api";
 import type { Lead } from "../../types/lead";
+import { formatDate } from "../../utils/formatDate";
+
+function mapLeadToFormValues(lead: Lead): LeadEditFormValues {
+  return {
+    companyName: lead.company_name ?? "",
+    firstName: lead.first_name ?? "",
+    lastName: lead.last_name ?? "",
+    email: lead.email ?? "",
+    phone: lead.phone ?? "",
+    projectType: lead.project_type ?? "",
+    message: lead.message ?? "",
+    status: lead.status,
+  };
+}
 
 export default function LeadDetailsPage() {
   const { leadId } = useParams<{ leadId: string }>();
@@ -11,10 +29,12 @@ export default function LeadDetailsPage() {
   const accessToken = session?.access_token;
 
   const [lead, setLead] = useState<Lead | null>(null);
+  const [formValues, setFormValues] = useState<LeadEditFormValues | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
-
-  const navigate = useNavigate();
+  const [saveError, setSaveError] = useState("");
 
   useEffect(() => {
     async function loadLead() {
@@ -23,8 +43,6 @@ export default function LeadDetailsPage() {
         setIsLoading(false);
         return;
       }
-
-      console.log("Lead ID from URL params: ", leadId);
 
       if (!leadId) {
         setError("Lead ID is missing.");
@@ -36,15 +54,17 @@ export default function LeadDetailsPage() {
         setIsLoading(true);
         setError("");
 
-        const lead = await getLead(accessToken, leadId);
+        const result = await getLead(accessToken, leadId);
 
-        if (!lead) {
+        if (!result) {
           setError("Lead not found.");
           setLead(null);
+          setFormValues(null);
           return;
         }
 
-        setLead(lead);
+        setLead(result);
+        setFormValues(mapLeadToFormValues(result));
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "Failed to load lead details.";
@@ -57,6 +77,85 @@ export default function LeadDetailsPage() {
 
     loadLead();
   }, [accessToken, leadId]);
+
+  function handleEditClick() {
+    if (!lead) return;
+
+    setFormValues(mapLeadToFormValues(lead));
+    setSaveError("");
+    setIsEditing(true);
+  }
+
+  function handleCancelEdit() {
+    if (!lead) return;
+
+    setFormValues(mapLeadToFormValues(lead));
+    setSaveError("");
+    setIsEditing(false);
+  }
+
+  function handleFormChange(
+    event: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) {
+    const { name, value } = event.target;
+
+    setFormValues((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        [name]: value,
+      };
+    });
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!accessToken) {
+      setSaveError("No active admin session found.");
+      return;
+    }
+
+    if (!leadId) {
+      setSaveError("Lead ID is missing.");
+      return;
+    }
+
+    if (!formValues) {
+      setSaveError("Lead form is not ready.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setSaveError("");
+
+      const updatedLead = await modifyLead(accessToken, leadId, {
+        companyName: formValues.companyName,
+        firstName: formValues.firstName,
+        lastName: formValues.lastName,
+        email: formValues.email,
+        phone: formValues.phone,
+        projectType: formValues.projectType,
+        message: formValues.message,
+        status: formValues.status,
+      });
+
+      setLead(updatedLead);
+      setFormValues(mapLeadToFormValues(updatedLead));
+      setIsEditing(false);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to update lead.";
+
+      setSaveError(message);
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   return (
     <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
@@ -89,13 +188,15 @@ export default function LeadDetailsPage() {
                 Back to Leads
               </Link>
 
-              <button
-                type="button"
-                onClick={() => navigate("/admin/leads")}
-                className="inline-flex items-center rounded-[2px] border border-[var(--color-primary)] px-4 py-3 text-[12px] uppercase tracking-[0.18em] text-[var(--color-primary)] transition duration-200 hover:bg-[rgba(200,184,154,0.08)]"
-              >
-                Close
-              </button>
+              {!isLoading && !error && lead && !isEditing ? (
+                <button
+                  type="button"
+                  onClick={handleEditClick}
+                  className="inline-flex items-center rounded-[2px] border border-[var(--color-primary)] px-4 py-3 text-[12px] uppercase tracking-[0.18em] text-[var(--color-primary)] transition duration-200 hover:bg-[rgba(200,184,154,0.08)]"
+                >
+                  Edit
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -132,7 +233,22 @@ export default function LeadDetailsPage() {
           </div>
         ) : null}
 
-        {!isLoading && !error && lead ? <LeadDetailsCard lead={lead} /> : null}
+        {!isLoading && !error && lead && !isEditing ? (
+          <LeadDetailsCard lead={lead} />
+        ) : null}
+
+        {!isLoading && !error && lead && isEditing && formValues ? (
+          <LeadEditForm
+            values={formValues}
+            onChange={handleFormChange}
+            onSubmit={handleSubmit}
+            onCancel={handleCancelEdit}
+            isSaving={isSaving}
+            error={saveError}
+            leadId={lead.id}
+            createdAtLabel={formatDate(lead.created_at)}
+          />
+        ) : null}
       </section>
     </main>
   );
