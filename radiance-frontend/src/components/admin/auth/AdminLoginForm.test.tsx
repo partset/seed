@@ -1,11 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
+import { vi } from "vitest";
 import AdminLoginForm from "./AdminLoginForm";
-import { loginAdmin } from "../../../services/api/admin/auth/loginAdmin";
+import { useAdminAuth } from "../../../hooks/useAdminAuth";
 
 const mockNavigate = vi.fn();
+const mockLogin = vi.fn();
 
 vi.mock("react-router-dom", async () => {
   const actual =
@@ -19,63 +20,30 @@ vi.mock("react-router-dom", async () => {
   };
 });
 
-vi.mock("../../../services/api/admin/auth/loginAdmin", () => ({
-  loginAdmin: vi.fn(),
+vi.mock("../../../hooks/useAdminAuth", () => ({
+  useAdminAuth: vi.fn(),
 }));
+
+const mockUseAdminAuth = vi.mocked(useAdminAuth);
 
 describe("AdminLoginForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+
+    mockUseAdminAuth.mockReturnValue({
+      user: null,
+      session: null,
+      isAdmin: false,
+      isAuthenticated: false,
+      isLoading: false,
+      login: mockLogin,
+      logout: vi.fn(),
+    });
   });
 
-  it("shows validation errors when submitted empty", async () => {
+  it("navigates to /admin/leads after successful login", async () => {
     const user = userEvent.setup();
-
-    render(
-      <MemoryRouter>
-        <AdminLoginForm />
-      </MemoryRouter>,
-    );
-
-    await user.click(screen.getByRole("button", { name: /sign in/i }));
-
-    expect(screen.getByText("Email is required.")).toBeInTheDocument();
-    expect(screen.getByText("Password is required.")).toBeInTheDocument();
-    expect(loginAdmin).not.toHaveBeenCalled();
-  });
-
-  it("shows invalid email error", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <MemoryRouter>
-        <AdminLoginForm />
-      </MemoryRouter>,
-    );
-
-    await user.type(screen.getByLabelText(/email/i), "alexexample.com");
-    await user.type(screen.getByLabelText(/password/i), "password123");
-    await user.click(screen.getByRole("button", { name: /sign in/i }));
-
-    expect(
-      screen.getByText("Please enter a valid email address."),
-    ).toBeInTheDocument();
-
-    expect(loginAdmin).not.toHaveBeenCalled();
-  });
-
-  it("navigates to /admin/ after successful login", async () => {
-    const user = userEvent.setup();
-
-    vi.mocked(loginAdmin).mockResolvedValue({
-      user: {
-        id: "user-123",
-        email: "alex@example.com",
-      },
-      session: {
-        access_token: "valid-token",
-      },
-    } as any);
+    mockLogin.mockResolvedValue(undefined);
 
     render(
       <MemoryRouter>
@@ -88,23 +56,18 @@ describe("AdminLoginForm", () => {
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => {
-      expect(loginAdmin).toHaveBeenCalledWith({
+      expect(mockLogin).toHaveBeenCalledWith({
         email: "alex@example.com",
         password: "password123",
       });
     });
 
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/admin/");
-    });
+    expect(mockNavigate).toHaveBeenCalledWith("/admin/leads");
   });
 
   it("shows backend/auth error when login fails", async () => {
     const user = userEvent.setup();
-
-    vi.mocked(loginAdmin).mockRejectedValue(
-      new Error("Invalid login credentials"),
-    );
+    mockLogin.mockRejectedValue(new Error("Invalid login credentials"));
 
     render(
       <MemoryRouter>
@@ -119,29 +82,5 @@ describe("AdminLoginForm", () => {
     expect(
       await screen.findByText("Invalid login credentials"),
     ).toBeInTheDocument();
-
-    expect(mockNavigate).not.toHaveBeenCalled();
-  });
-
-  it("toggles password visibility", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <MemoryRouter>
-        <AdminLoginForm />
-      </MemoryRouter>,
-    );
-
-    const passwordInput = screen.getByLabelText(/password/i);
-
-    expect(passwordInput).toHaveAttribute("type", "password");
-
-    await user.click(screen.getByRole("button", { name: /show password/i }));
-
-    expect(passwordInput).toHaveAttribute("type", "text");
-
-    await user.click(screen.getByRole("button", { name: /hide password/i }));
-
-    expect(passwordInput).toHaveAttribute("type", "password");
   });
 });

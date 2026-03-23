@@ -4,7 +4,7 @@ import { vi } from "vitest";
 import ContactForm from "./ContactForm";
 import { submitLead } from "../../services/api/lead/submit/api";
 
-vi.mock("../../services/api/leads/submit/api", () => ({
+vi.mock("../../services/api/lead/submit/api", () => ({
   submitLead: vi.fn(),
 }));
 

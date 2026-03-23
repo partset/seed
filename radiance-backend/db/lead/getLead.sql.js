@@ -1,5 +1,5 @@
 module.exports = {
-  getAllLeads: `
+  getLead: `
     SELECT
         id,
         created_at,
@@ -12,6 +12,6 @@ module.exports = {
         message,
         status
     FROM leads
-    ORDER BY created_at DESC
+    WHERE id = $1
   `,
 };

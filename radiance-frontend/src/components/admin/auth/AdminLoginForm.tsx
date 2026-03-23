@@ -8,8 +8,8 @@ import {
   hasAdminLoginErrors,
   validateAdminLogin,
 } from "../../../utils/auth/adminLoginValidation";
-import { loginAdmin } from "../../../services/api/admin/auth/loginAdmin";
 import AdminAuthInput from "./AdminAuthInput";
+import { useAdminAuth } from "../../../hooks/useAdminAuth";
 
 const INITIAL_VALUES: AdminLoginFormValues = {
   email: "",
@@ -20,6 +20,7 @@ const INITIAL_ERRORS: AdminLoginErrors = {};
 
 export default function AdminLoginForm() {
   const navigate = useNavigate();
+  const { login } = useAdminAuth();
 
   const [values, setValues] = useState<AdminLoginFormValues>(INITIAL_VALUES);
   const [errors, setErrors] = useState<AdminLoginErrors>(INITIAL_ERRORS);
@@ -55,9 +56,8 @@ export default function AdminLoginForm() {
     setErrors(INITIAL_ERRORS);
 
     try {
-      await loginAdmin(values);
-
-      navigate("/admin/");
+      await login(values);
+      navigate("/admin/leads");
     } catch (error) {
       const message =
         error instanceof Error

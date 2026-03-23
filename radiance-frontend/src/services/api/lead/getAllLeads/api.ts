@@ -1,0 +1,23 @@
+import type { Lead } from "../../../../types/lead";
+import type { ApiResponse } from "../../response";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+export async function getAllLeads(token: string): Promise<Lead[]> {
+  const response = await fetch(`${API_BASE_URL}/api/lead/`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const result: ApiResponse<Lead[]> = await response.json();
+  console.log("API response for getAllLeads:", result);
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.error || "Failed to fetch leads");
+  }
+
+  return result.data ?? [];
+}
