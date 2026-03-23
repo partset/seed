@@ -1,12 +1,23 @@
-jest.mock("../../../services/dbClient", () => ({
-  query: jest.fn(),
-}));
+jest.mock("../../../services/dbClient", () => {
+  const mockQuery = jest.fn();
+
+  return {
+    query: mockQuery,
+    connect: jest.fn(() => ({
+      query: mockQuery,
+      release: jest.fn(),
+    })),
+    __mockQuery: mockQuery,
+  };
+});
+
+const db = require("../../../services/dbClient");
+const mockQuery = db.__mockQuery;
 
 jest.mock("../../../db/lead/getLead.sql", () => ({
   getLead: "SELECT * FROM leads WHERE id = $1",
 }));
 
-const db = require("../../../services/dbClient");
 const { getLeadService } = require("../../../services/lead/getLeadService");
 
 describe("getLeadService", () => {

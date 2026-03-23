@@ -1,11 +1,22 @@
-const db = require("../../../services/dbClient");
 const {
   checkAdminService,
 } = require("../../../services/admin/checkAdminService");
 
-jest.mock("../../../services/dbClient", () => ({
-  query: jest.fn(),
-}));
+jest.mock("../../../services/dbClient", () => {
+  const mockQuery = jest.fn();
+
+  return {
+    query: mockQuery,
+    connect: jest.fn(() => ({
+      query: mockQuery,
+      release: jest.fn(),
+    })),
+    __mockQuery: mockQuery,
+  };
+});
+
+const db = require("../../../services/dbClient");
+const mockQuery = db.__mockQuery;
 
 describe("checkAdminService", () => {
   beforeEach(() => {
