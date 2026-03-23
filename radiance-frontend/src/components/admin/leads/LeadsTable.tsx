@@ -1,5 +1,4 @@
 import type { Lead } from "../../../types/lead";
-import { formatDate } from "../../../utils/formatDate";
 import LeadStatusBadge from "./LeadStatusBadge";
 
 interface LeadsTableProps {
@@ -14,20 +13,17 @@ export default function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
         <table className="min-w-full border-collapse">
           <thead className="bg-white/5">
             <tr className="text-left">
-              <th className="px-6 py-4 text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">
+              <th className="px-4 py-4 text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">
                 Company
               </th>
-              <th className="px-6 py-4 text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">
+              <th className="px-4 py-4 text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">
                 Contact
               </th>
-              <th className="px-6 py-4 text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">
-                Website Type
+              <th className="px-4 py-4 text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">
+                Project Type
               </th>
-              <th className="px-6 py-4 text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">
+              <th className="px-4 py-4 text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">
                 Status
-              </th>
-              <th className="px-6 py-4 text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">
-                Submitted
               </th>
             </tr>
           </thead>
@@ -39,13 +35,13 @@ export default function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
                 onClick={() => onLeadClick?.(lead)}
                 className="cursor-pointer border-t border-white/10 transition hover:bg-white/5"
               >
-                <td className="px-6 py-5 align-top">
+                <td className="px-4 py-5 align-top">
                   <div className="font-medium text-[var(--color-foreground)]">
                     {lead.company_name}
                   </div>
                 </td>
 
-                <td className="px-6 py-5 align-top">
+                <td className="px-4 py-5 align-top">
                   <div>
                     {lead.first_name} {lead.last_name}
                   </div>
@@ -57,18 +53,14 @@ export default function LeadsTable({ leads, onLeadClick }: LeadsTableProps) {
                   </div>
                 </td>
 
-                <td className="px-6 py-5 align-top">
+                <td className="px-4 py-5 align-top">
                   <span className="text-sm text-[var(--color-foreground)]">
                     {lead.project_type || "Not provided"}
                   </span>
                 </td>
 
-                <td className="px-6 py-5 align-top">
+                <td className="px-4 py-5 align-top">
                   <LeadStatusBadge status={lead.status} />
-                </td>
-
-                <td className="px-6 py-5 align-top text-sm text-[var(--color-muted)]">
-                  {formatDate(lead.created_at)}
                 </td>
               </tr>
             ))}

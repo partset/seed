@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LeadsTable from "../../components/admin/leads/LeadsTable";
 import { getAllLeads } from "../../services/api/lead/getAllLeads/api";
@@ -28,7 +28,6 @@ export default function LeadsPage() {
         setError("");
 
         const data = await getAllLeads(accessToken);
-        console.log("Fetched leads: ", data);
         setLeads(data);
       } catch (err) {
         const message =
@@ -41,6 +40,14 @@ export default function LeadsPage() {
 
     loadLeads();
   }, [accessToken]);
+
+  const newLeads = useMemo(() => {
+    return leads.filter((lead) => lead.status?.toLowerCase() === "new");
+  }, [leads]);
+
+  const inProgressLeads = useMemo(() => {
+    return leads.filter((lead) => lead.status?.toLowerCase() !== "new");
+  }, [leads]);
 
   function handleLeadClick(lead: Lead) {
     navigate(`/admin/leads/${lead.id}`);
@@ -116,7 +123,90 @@ export default function LeadsPage() {
           ) : null}
 
           {!isLoading && !error && leads.length > 0 ? (
-            <LeadsTable leads={leads} onLeadClick={handleLeadClick} />
+            <div className="grid gap-6 xl:grid-cols-2">
+              <section className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div>
+                    <h2
+                      className="text-3xl uppercase"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      New Leads
+                    </h2>
+                    <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
+                      Businesses that recently submitted the public contact form
+                      and still need first review.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
+                      Count
+                    </p>
+                    <p className="mt-1 text-xl font-medium text-[var(--color-foreground)]">
+                      {newLeads.length}
+                    </p>
+                  </div>
+                </div>
+
+                {newLeads.length > 0 ? (
+                  <LeadsTable leads={newLeads} onLeadClick={handleLeadClick} />
+                ) : (
+                  <div className="rounded-3xl border border-white/10 bg-black/20 px-6 py-10 text-center">
+                    <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-muted)]">
+                      No new leads
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+                      New submissions will appear here as soon as they enter the
+                      system.
+                    </p>
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div>
+                    <h2
+                      className="text-3xl uppercase"
+                      style={{ fontFamily: "var(--font-display)" }}
+                    >
+                      In Progress Leads
+                    </h2>
+                    <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
+                      Leads that have moved beyond the initial intake stage and
+                      are already being worked by the team.
+                    </p>
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3 text-right">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
+                      Count
+                    </p>
+                    <p className="mt-1 text-xl font-medium text-[var(--color-foreground)]">
+                      {inProgressLeads.length}
+                    </p>
+                  </div>
+                </div>
+
+                {inProgressLeads.length > 0 ? (
+                  <LeadsTable
+                    leads={inProgressLeads}
+                    onLeadClick={handleLeadClick}
+                  />
+                ) : (
+                  <div className="rounded-3xl border border-white/10 bg-black/20 px-6 py-10 text-center">
+                    <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-muted)]">
+                      No in progress leads
+                    </p>
+                    <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+                      Once a lead moves beyond the new stage, it will appear in
+                      this section.
+                    </p>
+                  </div>
+                )}
+              </section>
+            </div>
           ) : null}
         </section>
       </section>
