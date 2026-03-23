@@ -52,7 +52,7 @@ describe("submitLead", () => {
 
     expect(result).toEqual({
       success: true,
-      data: { contactId: "123" },
+      data: { leadId: "123" },
       error: "",
     });
   });

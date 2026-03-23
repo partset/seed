@@ -58,13 +58,9 @@ describe("loginAdmin", () => {
     expect(supabase.auth.signOut).not.toHaveBeenCalled();
 
     expect(result).toEqual({
-      user: {
-        id: "user-123",
-        email: "alex@example.com",
-      },
-      session: {
-        access_token: "valid-token",
-      },
+      userId: "user-123",
+      accessToken: "valid-token",
+      isAdmin: true,
     });
   });
 
