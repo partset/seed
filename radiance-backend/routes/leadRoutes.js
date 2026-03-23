@@ -5,8 +5,14 @@ const { insertLead } = require("../controllers/lead/insertLead");
 const { modifyLead } = require("../controllers/lead/modifyLead");
 const { getAllLeads } = require("../controllers/lead/getAllLeads");
 const { getLead } = require("../controllers/lead/getLead");
+const {
+  convertLeadToClient,
+} = require("../controllers/lead/convertLeadToClient");
 const { validateInsertLead } = require("../validators/lead/validateInsertLead");
 const { validateModifyLead } = require("../validators/lead/validateModifyLead");
+const {
+  validateConvertLeadToClient,
+} = require("../validators/lead/validateConvertLeadToClient");
 
 const router = express.Router();
 
@@ -19,6 +25,13 @@ router.put(
   requireAdmin,
   validateModifyLead,
   modifyLead,
+);
+router.post(
+  "/:id/convert-to-client",
+  requireSupabaseAuth,
+  requireAdmin,
+  validateConvertLeadToClient,
+  convertLeadToClient,
 );
 
 module.exports = router;

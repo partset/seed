@@ -1,11 +1,22 @@
 const request = require("supertest");
 const app = require("../../app");
-const db = require("../../services/dbClient");
 const { supabaseAdmin } = require("../../services/supabaseAdmin");
 
-jest.mock("../../services/dbClient", () => ({
-  query: jest.fn(),
-}));
+jest.mock("../../services/dbClient", () => {
+  const mockQuery = jest.fn();
+
+  return {
+    query: mockQuery,
+    connect: jest.fn(() => ({
+      query: mockQuery,
+      release: jest.fn(),
+    })),
+    __mockQuery: mockQuery,
+  };
+});
+
+const db = require("../../services/dbClient");
+const mockQuery = db.__mockQuery;
 
 jest.mock("../../services/supabaseAdmin", () => ({
   supabaseAdmin: {

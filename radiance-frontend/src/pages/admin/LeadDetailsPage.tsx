@@ -9,6 +9,7 @@ import { getLead } from "../../services/api/lead/getLead/api";
 import { modifyLead } from "../../services/api/lead/modifyLead/api";
 import type { Lead } from "../../types/lead";
 import { formatDate } from "../../utils/formatDate";
+import { convertLeadToClient } from "../../services/api/lead/convertToClient/api";
 
 function mapLeadToFormValues(lead: Lead): LeadEditFormValues {
   return {
@@ -35,6 +36,8 @@ export default function LeadDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState("");
+  const [isConverting, setIsConverting] = useState(false);
+  const [convertError, setConvertError] = useState("");
 
   useEffect(() => {
     async function loadLead() {
@@ -109,6 +112,56 @@ export default function LeadDetailsPage() {
         [name]: value,
       };
     });
+  }
+
+  async function handleConvertToClient() {
+    if (!accessToken) {
+      setConvertError("No active admin session found.");
+      return;
+    }
+
+    if (!leadId) {
+      setConvertError("Lead ID is missing.");
+      return;
+    }
+
+    if (!lead) {
+      setConvertError("Lead details are not available.");
+      return;
+    }
+
+    try {
+      setIsConverting(true);
+      setConvertError("");
+
+      await convertLeadToClient(accessToken, leadId, {
+        companyName: lead.company_name ?? "",
+        email: lead.email ?? "",
+        phone: lead.phone ?? "",
+        projectType: lead.project_type ?? "",
+        projectName:
+          lead.company_name && lead.project_type
+            ? `${lead.company_name} - ${lead.project_type}`
+            : "",
+      });
+
+      const convertedLead: Lead = {
+        ...lead,
+        status: "Converted to Client",
+      };
+
+      setLead(convertedLead);
+      setFormValues(mapLeadToFormValues(convertedLead));
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : "Failed to convert lead to client.";
+
+      setConvertError(message);
+    } finally {
+      setIsConverting(false);
+    }
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -234,7 +287,12 @@ export default function LeadDetailsPage() {
         ) : null}
 
         {!isLoading && !error && lead && !isEditing ? (
-          <LeadDetailsCard lead={lead} />
+          <LeadDetailsCard
+            lead={lead}
+            onConvertToClient={handleConvertToClient}
+            isConverting={isConverting}
+            convertError={convertError}
+          />
         ) : null}
 
         {!isLoading && !error && lead && isEditing && formValues ? (

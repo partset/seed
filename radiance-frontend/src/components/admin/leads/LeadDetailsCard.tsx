@@ -5,10 +5,20 @@ import LeadStatusBadge from "./LeadStatusBadge";
 
 interface LeadDetailsCardProps {
   lead: Lead;
+  onConvertToClient?: () => void;
+  isConverting?: boolean;
+  convertError?: string;
 }
 
-export default function LeadDetailsCard({ lead }: LeadDetailsCardProps) {
+export default function LeadDetailsCard({
+  lead,
+  onConvertToClient,
+  isConverting = false,
+  convertError = "",
+}: LeadDetailsCardProps) {
   const fullName = `${lead.first_name} ${lead.last_name}`.trim();
+  const isAlreadyConverted =
+    lead.status?.toLowerCase() === "converted to client";
 
   return (
     <section className="space-y-6">
@@ -46,9 +56,32 @@ export default function LeadDetailsCard({ lead }: LeadDetailsCardProps) {
                 {lead.id}
               </p>
             </div>
+
+            {onConvertToClient && (
+              <button
+                type="button"
+                onClick={onConvertToClient}
+                disabled={isConverting || isAlreadyConverted}
+                className="rounded-full border border-white/10 bg-[var(--color-primary)] px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isAlreadyConverted
+                  ? "Already Converted"
+                  : isConverting
+                    ? "Converting..."
+                    : "Convert to Client"}
+              </button>
+            )}
           </div>
         </div>
       </div>
+
+      {convertError ? (
+        <div className="rounded-3xl border border-[var(--color-error-border)] bg-[rgba(252,165,165,0.08)] px-6 py-4">
+          <p className="text-sm leading-7 text-[var(--color-error)]">
+            {convertError}
+          </p>
+        </div>
+      ) : null}
 
       <div className="grid gap-4 md:grid-cols-2">
         <LeadInfoRow label="Company Name" value={lead.company_name} />

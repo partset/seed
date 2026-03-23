@@ -7,6 +7,7 @@ import LeadDetailsPage from "./LeadDetailsPage";
 import { useAdminAuth } from "../../hooks/useAdminAuth";
 import { getLead } from "../../services/api/lead/getLead/api";
 import { modifyLead } from "../../services/api/lead/modifyLead/api";
+import { convertLeadToClient } from "../../services/api/lead/convertToClient/api";
 
 vi.mock("../../hooks/useAdminAuth", () => ({
   useAdminAuth: vi.fn(),
@@ -20,9 +21,14 @@ vi.mock("../../services/api/lead/modifyLead/api", () => ({
   modifyLead: vi.fn(),
 }));
 
+vi.mock("../../services/api/lead/convertToClient/api", () => ({
+  convertLeadToClient: vi.fn(),
+}));
+
 const mockUseAdminAuth = vi.mocked(useAdminAuth);
 const mockGetLead = vi.mocked(getLead);
 const mockModifyLead = vi.mocked(modifyLead);
+const mockConvertLeadToClient = vi.mocked(convertLeadToClient);
 
 const mockLead = {
   id: "lead-123",
@@ -106,6 +112,9 @@ describe("LeadDetailsPage", () => {
     expect(screen.getByText("Business Website")).toBeInTheDocument();
     expect(screen.getByText("Need a website")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /edit/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /convert to client/i }),
+    ).toBeInTheDocument();
   });
 
   it("renders error state when api call fails", async () => {
@@ -253,6 +262,99 @@ describe("LeadDetailsPage", () => {
     await waitFor(() => {
       expect(screen.getByText("Failed to update lead")).toBeInTheDocument();
     });
+  });
+
+  it("calls convertLeadToClient and updates status after success", async () => {
+    mockGetLead.mockResolvedValue(mockLead);
+    mockConvertLeadToClient.mockResolvedValue({
+      success: true,
+      data: {
+        message: "Lead converted to client successfully",
+        company: {
+          id: "company-123",
+          name: "Acme Co",
+          primary_email: "alex@test.com",
+          primary_phone: "1234567890",
+        },
+        project: {
+          id: "project-123",
+          company_id: "company-123",
+          name: "Acme Co - Business Website",
+          status: "active",
+        },
+      },
+      error: "",
+    });
+
+    renderLeadDetailsPage();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /convert to client/i }),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /convert to client/i }));
+
+    await waitFor(() => {
+      expect(mockConvertLeadToClient).toHaveBeenCalledWith(
+        "test-token",
+        "lead-123",
+        {
+          companyName: "Acme Co",
+          email: "alex@test.com",
+          phone: "1234567890",
+          projectType: "Business Website",
+          projectName: "Acme Co - Business Website",
+        },
+      );
+    });
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /already converted/i }),
+      ).toBeDisabled();
+    });
+  });
+
+  it("shows convert error when convertLeadToClient fails", async () => {
+    mockGetLead.mockResolvedValue(mockLead);
+    mockConvertLeadToClient.mockRejectedValue(
+      new Error("Failed to convert lead to client"),
+    );
+
+    renderLeadDetailsPage();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /convert to client/i }),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /convert to client/i }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("Failed to convert lead to client"),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("disables convert button while converting", async () => {
+    mockGetLead.mockResolvedValue(mockLead);
+    mockConvertLeadToClient.mockReturnValue(new Promise(() => {}));
+
+    renderLeadDetailsPage();
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("button", { name: /convert to client/i }),
+      ).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /convert to client/i }));
+
+    expect(screen.getByRole("button", { name: /converting/i })).toBeDisabled();
   });
 
   it("renders back to leads action", async () => {
