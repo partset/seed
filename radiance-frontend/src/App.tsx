@@ -8,6 +8,7 @@ import ContactPage from "./pages/ContactPage";
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import LeadsPage from "./pages/admin/LeadsPage";
 import LeadDetailsPage from "./pages/admin/LeadDetailsPage";
+import ClientLoginPage from "./pages/client/ClientLoginPage";
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
             <Route path="/admin/leads" element={<LeadsPage />} />
             <Route path="/admin/leads/:leadId" element={<LeadDetailsPage />} />
           </Route>
+          <Route path="/client/login" element={<ClientLoginPage />} />
         </Routes>
       </AdminAuthProvider>
     </BrowserRouter>
