@@ -1,182 +1,287 @@
 const request = require("supertest");
-const app = require("../../app");
-
-const mockRelease = jest.fn();
-
-jest.mock("../../services/dbClient", () => {
-  const mockQuery = jest.fn();
-
-  return {
-    query: mockQuery,
-    connect: jest.fn(() => ({
-      query: mockQuery,
-      release: jest.fn(),
-    })),
-    __mockQuery: mockQuery,
-  };
-});
-
-const db = require("../../services/dbClient");
-const mockQuery = db.__mockQuery;
+const express = require("express");
 
 jest.mock("../../middleware/requireSupabaseAuth", () => ({
-  requireSupabaseAuth: (req, res, next) => next(),
+  requireSupabaseAuth: jest.fn((req, res, next) => {
+    req.authUserId = "admin-auth-user-1";
+    req.authUser = { id: "admin-auth-user-1", email: "admin@test.com" };
+    next();
+  }),
 }));
 
 jest.mock("../../middleware/requireAdmin", () => ({
-  requireAdmin: (req, res, next) => next(),
+  requireAdmin: jest.fn((req, res, next) => next()),
 }));
 
-describe("POST /api/lead/:id/convert-to-client", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+jest.mock("../../services/lead/convertLeadToClientService", () => ({
+  convertLeadToClientService: jest.fn(),
+}));
 
-    db.connect.mockResolvedValue({
-      query: mockQuery,
-      release: mockRelease,
+const { requireSupabaseAuth } = require("../../middleware/requireSupabaseAuth");
+const { requireAdmin } = require("../../middleware/requireAdmin");
+const {
+  convertLeadToClientService,
+} = require("../../services/lead/convertLeadToClientService");
+const leadRoutes = require("../../routes/leadRoutes");
+
+function createTestApp() {
+  const app = express();
+
+  app.use(express.json());
+  app.use("/api/lead", leadRoutes);
+
+  app.use((error, req, res, next) => {
+    res.status(error.statusCode || 500).json({
+      success: false,
+      data: {},
+      error: error.message || "Internal Server Error",
     });
   });
 
-  it("should convert lead to client successfully", async () => {
-    mockQuery
-      .mockResolvedValueOnce({ rows: [] }) // BEGIN
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            id: "company-123",
-            name: "Radiance",
-            primary_email: "alex@example.com",
-            primary_phone: "1234567890",
-          },
-        ],
-      }) // insertCompany
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            id: "project-123",
-            company_id: "company-123",
-            name: "Radiance - web app",
-            status: "active",
-          },
-        ],
-      }) // insertProject
-      .mockResolvedValueOnce({
-        rows: [{ id: "lead-123", status: "Converted" }],
-      }) // updateLeadStatusToConverted
-      .mockResolvedValueOnce({ rows: [] }); // COMMIT
+  return app;
+}
+
+describe("POST /api/lead/:id/convert-to-client", () => {
+  let app;
+
+  beforeEach(() => {
+    app = createTestApp();
+    jest.clearAllMocks();
+  });
+
+  it("returns 201 when the lead is converted successfully", async () => {
+    convertLeadToClientService.mockResolvedValue({
+      message:
+        "Lead converted to client successfully. The client can now use first-time setup with an email code.",
+      company: {
+        id: "company-1",
+        name: "Acme Co",
+        primary_email: "client@test.com",
+        primary_phone: "1234567890",
+      },
+      project: {
+        id: "project-1",
+        company_id: "company-1",
+        name: "Acme Co - Business Website",
+        status: "began",
+      },
+      clientUser: {
+        id: "client-user-1",
+        auth_user_id: "auth-user-1",
+        company_id: "company-1",
+        email: "client@test.com",
+        first_name: "Alex",
+        last_name: "Pham",
+        is_active: true,
+      },
+      lead: {
+        id: "lead-123",
+        status: "Converted to Client",
+      },
+    });
 
     const response = await request(app)
       .post("/api/lead/lead-123/convert-to-client")
       .send({
-        companyName: "Radiance",
-        email: "alex@example.com",
-        phone: "1234567890",
-        projectType: "web app",
-        projectName: "",
+        companyName: "  Acme Co  ",
+        email: "  CLIENT@TEST.COM  ",
+        phone: " 1234567890 ",
+        projectType: "  Business Website  ",
+        projectName: "  Acme Co - Business Website  ",
+        firstName: "  Alex ",
+        lastName: " Pham ",
       });
+
+    expect(requireSupabaseAuth).toHaveBeenCalledTimes(1);
+    expect(requireAdmin).toHaveBeenCalledTimes(1);
+
+    expect(convertLeadToClientService).toHaveBeenCalledTimes(1);
+    expect(convertLeadToClientService).toHaveBeenCalledWith({
+      leadId: "lead-123",
+      companyName: "Acme Co",
+      email: "client@test.com",
+      phone: "1234567890",
+      projectType: "Business Website",
+      projectName: "Acme Co - Business Website",
+      firstName: "Alex",
+      lastName: "Pham",
+    });
 
     expect(response.status).toBe(201);
     expect(response.body).toEqual({
       success: true,
       data: {
-        message: "Lead converted to client successfully",
+        message:
+          "Lead converted to client successfully. The client can now use first-time setup with an email code.",
         company: {
-          id: "company-123",
-          name: "Radiance",
-          primary_email: "alex@example.com",
+          id: "company-1",
+          name: "Acme Co",
+          primary_email: "client@test.com",
           primary_phone: "1234567890",
         },
         project: {
-          id: "project-123",
-          company_id: "company-123",
-          name: "Radiance - web app",
-          status: "active",
+          id: "project-1",
+          company_id: "company-1",
+          name: "Acme Co - Business Website",
+          status: "began",
+        },
+        clientUser: {
+          id: "client-user-1",
+          auth_user_id: "auth-user-1",
+          company_id: "company-1",
+          email: "client@test.com",
+          first_name: "Alex",
+          last_name: "Pham",
+          is_active: true,
+        },
+        lead: {
+          id: "lead-123",
+          status: "Converted to Client",
         },
       },
       error: "",
     });
-
-    expect(db.connect).toHaveBeenCalledTimes(1);
-    expect(mockRelease).toHaveBeenCalledTimes(1);
   });
 
-  it("should return 400 when lead id is missing", async () => {
-    const response = await request(app)
-      .post("/api/lead//convert-to-client")
-      .send({
-        companyName: "Radiance",
-        email: "alex@example.com",
-        phone: "1234567890",
-        projectType: "web app",
-      });
-
-    expect(response.status).toBe(404);
-  });
-
-  it("should return 400 when companyName is missing", async () => {
+  it("returns 400 when companyName is missing", async () => {
     const response = await request(app)
       .post("/api/lead/lead-123/convert-to-client")
       .send({
-        companyName: "",
-        email: "alex@example.com",
+        companyName: " ",
+        email: "client@test.com",
         phone: "1234567890",
-        projectType: "web app",
+        projectType: "Business Website",
+        projectName: "Acme Co - Business Website",
+        firstName: "Alex",
+        lastName: "Pham",
       });
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
       success: false,
       data: {},
-      error: "Company name is required",
+      error: "Company name is required.",
     });
 
-    expect(db.connect).not.toHaveBeenCalled();
+    expect(convertLeadToClientService).not.toHaveBeenCalled();
   });
 
-  it("should return 400 when projectType is missing", async () => {
+  it("returns 400 when projectType is missing", async () => {
     const response = await request(app)
       .post("/api/lead/lead-123/convert-to-client")
       .send({
-        companyName: "Radiance",
-        email: "alex@example.com",
+        companyName: "Acme Co",
+        email: "client@test.com",
         phone: "1234567890",
-        projectType: "",
+        projectType: " ",
+        projectName: "Acme Co - Business Website",
+        firstName: "Alex",
+        lastName: "Pham",
       });
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
       success: false,
       data: {},
-      error: "Project type is required",
+      error: "Project type is required.",
     });
 
-    expect(db.connect).not.toHaveBeenCalled();
+    expect(convertLeadToClientService).not.toHaveBeenCalled();
   });
 
-  it("should return 500 when database fails", async () => {
-    mockQuery
-      .mockResolvedValueOnce({ rows: [] }) // BEGIN
-      .mockRejectedValueOnce(new Error("Database failure")) // insertCompany
-      .mockResolvedValueOnce({ rows: [] }); // ROLLBACK
+  it("returns 400 when email is missing", async () => {
+    const response = await request(app)
+      .post("/api/lead/lead-123/convert-to-client")
+      .send({
+        companyName: "Acme Co",
+        email: " ",
+        phone: "1234567890",
+        projectType: "Business Website",
+        projectName: "Acme Co - Business Website",
+        firstName: "Alex",
+        lastName: "Pham",
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      success: false,
+      data: {},
+      error: "Client email is required.",
+    });
+
+    expect(convertLeadToClientService).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when email is invalid", async () => {
+    const response = await request(app)
+      .post("/api/lead/lead-123/convert-to-client")
+      .send({
+        companyName: "Acme Co",
+        email: "not-an-email",
+        phone: "1234567890",
+        projectType: "Business Website",
+        projectName: "Acme Co - Business Website",
+        firstName: "Alex",
+        lastName: "Pham",
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      success: false,
+      data: {},
+      error: "Valid client email is required.",
+    });
+
+    expect(convertLeadToClientService).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 when lead id is missing", async () => {
+    const response = await request(app)
+      .post("/api/lead/%20/convert-to-client")
+      .send({
+        companyName: "Acme Co",
+        email: "client@test.com",
+        phone: "1234567890",
+        projectType: "Business Website",
+        projectName: "Acme Co - Business Website",
+        firstName: "Alex",
+        lastName: "Pham",
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      success: false,
+      data: {},
+      error: "Lead id is required.",
+    });
+
+    expect(convertLeadToClientService).not.toHaveBeenCalled();
+  });
+
+  it("returns the service error when the service throws", async () => {
+    const error = new Error("Client already exists");
+    error.statusCode = 400;
+
+    convertLeadToClientService.mockRejectedValue(error);
 
     const response = await request(app)
       .post("/api/lead/lead-123/convert-to-client")
       .send({
-        companyName: "Radiance",
-        email: "alex@example.com",
+        companyName: "Acme Co",
+        email: "client@test.com",
         phone: "1234567890",
-        projectType: "web app",
-        projectName: "",
+        projectType: "Business Website",
+        projectName: "Acme Co - Business Website",
+        firstName: "Alex",
+        lastName: "Pham",
       });
 
-    expect(response.status).toBe(500);
+    expect(convertLeadToClientService).toHaveBeenCalledTimes(1);
+    expect(response.status).toBe(400);
     expect(response.body).toEqual({
       success: false,
       data: {},
-      error: "Something went wrong",
+      error: "Client already exists",
     });
-
-    expect(db.connect).toHaveBeenCalledTimes(1);
-    expect(mockRelease).toHaveBeenCalledTimes(1);
   });
 });

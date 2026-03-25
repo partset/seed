@@ -1,12 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
 import AuthInput from "../../shared/auth/AuthInput";
-
-type ClientLoginFormValues = {
-  email: string;
-  password: string;
-};
+import { useClientAuth } from "../../../hooks/useClientAuth";
 
 type ClientLoginErrors = {
   email?: string;
@@ -14,80 +9,53 @@ type ClientLoginErrors = {
   form?: string;
 };
 
-const INITIAL_VALUES: ClientLoginFormValues = {
-  email: "",
-  password: "",
-};
-
 const INITIAL_ERRORS: ClientLoginErrors = {};
 
-function validateClientLogin(values: ClientLoginFormValues): ClientLoginErrors {
-  const errors: ClientLoginErrors = {};
-
-  if (!values.email.trim()) {
-    errors.email = "Email is required.";
-  }
-
-  if (!values.password.trim()) {
-    errors.password = "Password is required.";
-  }
-
-  return errors;
-}
-
-function hasClientLoginErrors(errors: ClientLoginErrors) {
-  return Boolean(errors.email || errors.password || errors.form);
-}
-
 export default function ClientLoginForm() {
-  const [values, setValues] = useState<ClientLoginFormValues>(INITIAL_VALUES);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [errors, setErrors] = useState<ClientLoginErrors>(INITIAL_ERRORS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const { login } = useClientAuth();
   const navigate = useNavigate();
-
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value } = event.target;
-
-    setValues((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    setErrors((prev) => ({
-      ...prev,
-      [name]: "",
-      form: "",
-    }));
-  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const validationErrors = validateClientLogin(values);
+    const nextErrors: ClientLoginErrors = {};
 
-    if (hasClientLoginErrors(validationErrors)) {
-      setErrors(validationErrors);
+    if (!email.trim()) {
+      nextErrors.email = "Email is required.";
+    }
+
+    if (!password.trim()) {
+      nextErrors.password = "Password is required.";
+    }
+
+    if (nextErrors.email || nextErrors.password) {
+      setErrors(nextErrors);
       return;
     }
 
-    setIsSubmitting(true);
-    setErrors(INITIAL_ERRORS);
-
     try {
-      console.log("Client login values:", values);
+      setIsSubmitting(true);
+      setErrors(INITIAL_ERRORS);
 
-      navigate("/client/dashboard");
+      await login({
+        email,
+        password,
+      });
+
+      navigate("/client/dashboard", { replace: true });
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
           : "Unable to sign in. Please try again.";
 
-      setErrors({
-        form: message,
-      });
+      setErrors({ form: message });
     } finally {
       setIsSubmitting(false);
     }
@@ -97,12 +65,15 @@ export default function ClientLoginForm() {
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <div className="space-y-5">
         <AuthInput
-          id="client-email"
+          id="client-login-email"
           name="email"
           type="email"
           label="Email"
-          value={values.email}
-          onChange={handleChange}
+          value={email}
+          onChange={(event) => {
+            setEmail(event.target.value);
+            setErrors((prev) => ({ ...prev, email: "", form: "" }));
+          }}
           placeholder="you@company.com"
           autoComplete="email"
           error={errors.email}
@@ -111,34 +82,28 @@ export default function ClientLoginForm() {
 
         <div className="space-y-2">
           <AuthInput
-            id="client-password"
+            id="client-login-password"
             name="password"
             type={showPassword ? "text" : "password"}
             label="Password"
-            value={values.password}
-            onChange={handleChange}
+            value={password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              setErrors((prev) => ({ ...prev, password: "", form: "" }));
+            }}
             placeholder="Enter your password"
             autoComplete="current-password"
             error={errors.password}
             disabled={isSubmitting}
           />
 
-          <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              onClick={() => setShowPassword((prev) => !prev)}
-              className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-muted)] transition duration-200 hover:text-[var(--color-primary)]"
-            >
-              {showPassword ? "Hide Password" : "Show Password"}
-            </button>
-
-            <Link
-              to="/client/forgot-password"
-              className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-muted)] transition duration-200 hover:text-[var(--color-primary)]"
-            >
-              Forgot Password
-            </Link>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowPassword((prev) => !prev)}
+            className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-muted)] transition duration-200 hover:text-[var(--color-primary)]"
+          >
+            {showPassword ? "Hide Password" : "Show Password"}
+          </button>
         </div>
       </div>
 

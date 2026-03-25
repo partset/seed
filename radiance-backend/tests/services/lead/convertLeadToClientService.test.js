@@ -1,292 +1,408 @@
+jest.mock("../../../services/dbClient", () => ({
+  connect: jest.fn(),
+}));
+
+jest.mock("../../../services/supabaseClient", () => ({
+  supabaseAdmin: {
+    auth: {
+      admin: {
+        createUser: jest.fn(),
+      },
+    },
+  },
+}));
+
+jest.mock("../../../db/lead/convertLeadToClient.sql", () => ({
+  insertCompany: "INSERT_COMPANY_SQL",
+  insertProject: "INSERT_PROJECT_SQL",
+  insertClientUser: "INSERT_CLIENT_USER_SQL",
+  updateLeadStatusToConverted: "UPDATE_LEAD_STATUS_SQL",
+}));
+
+const db = require("../../../services/dbClient");
+const { supabaseAdmin } = require("../../../services/supabaseClient");
 const {
   convertLeadToClientService,
 } = require("../../../services/lead/convertLeadToClientService");
-
-const mockRelease = jest.fn();
-
-jest.mock("../../../services/dbClient", () => {
-  const mockQuery = jest.fn();
-
-  return {
-    query: mockQuery,
-    connect: jest.fn(() => ({
-      query: mockQuery,
-      release: jest.fn(),
-    })),
-    __mockQuery: mockQuery,
-  };
-});
-
-const db = require("../../../services/dbClient");
-const mockQuery = db.__mockQuery;
+const convertLeadToClientQuery = require("../../../db/lead/convertLeadToClient.sql");
 
 describe("convertLeadToClientService", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
+  let mockClient;
 
-    db.connect.mockResolvedValue({
-      query: mockQuery,
-      release: mockRelease,
-    });
+  beforeEach(() => {
+    mockClient = {
+      query: jest.fn(),
+      release: jest.fn(),
+    };
+
+    db.connect.mockResolvedValue(mockClient);
+    jest.clearAllMocks();
   });
 
-  it("should convert lead to client successfully", async () => {
-    mockQuery
-      .mockResolvedValueOnce({ rows: [] }) // BEGIN
+  it("converts a lead to a client successfully with normalized values", async () => {
+    mockClient.query
+      .mockResolvedValueOnce() // BEGIN
       .mockResolvedValueOnce({
         rows: [
           {
-            id: "company-123",
-            name: "Radiance",
-            primary_email: "alex@example.com",
+            id: "company-1",
+            name: "Acme Co",
+            primary_email: "client@test.com",
             primary_phone: "1234567890",
           },
         ],
-      }) // insertCompany
+      })
       .mockResolvedValueOnce({
         rows: [
           {
-            id: "project-123",
-            company_id: "company-123",
-            name: "Radiance - web app",
-            status: "active",
+            id: "project-1",
+            company_id: "company-1",
+            name: "Acme Co - business website",
+            status: "began",
           },
         ],
-      }) // insertProject
+      })
       .mockResolvedValueOnce({
-        rows: [{ id: "lead-123", status: "Converted" }],
-      }) // updateLeadStatusToConverted
-      .mockResolvedValueOnce({ rows: [] }); // COMMIT
+        rows: [
+          {
+            id: "client-user-1",
+            auth_user_id: "auth-user-1",
+            company_id: "company-1",
+            email: "client@test.com",
+            first_name: "Alex",
+            last_name: "Pham",
+            is_active: true,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: "lead-123",
+            status: "Converted to Client",
+          },
+        ],
+      })
+      .mockResolvedValueOnce(); // COMMIT
+
+    supabaseAdmin.auth.admin.createUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "auth-user-1",
+        },
+      },
+      error: null,
+    });
 
     const result = await convertLeadToClientService({
       leadId: "lead-123",
-      companyName: "  Radiance  ",
-      email: "  ALEX@EXAMPLE.COM  ",
-      phone: "1234567890",
-      projectType: "  Web App  ",
+      companyName: "  Acme Co  ",
+      email: "  CLIENT@TEST.COM ",
+      phone: " 1234567890 ",
+      projectType: " Business Website ",
       projectName: "",
+      firstName: "  Alex ",
+      lastName: " Pham ",
     });
 
     expect(db.connect).toHaveBeenCalledTimes(1);
 
-    expect(mockQuery).toHaveBeenNthCalledWith(1, "BEGIN");
-    expect(mockQuery).toHaveBeenNthCalledWith(2, expect.any(String), [
-      "Radiance",
-      "alex@example.com",
-      "1234567890",
-    ]);
-    expect(mockQuery).toHaveBeenNthCalledWith(3, expect.any(String), [
-      "company-123",
-      "Radiance - web app",
-    ]);
-    expect(mockQuery).toHaveBeenNthCalledWith(4, expect.any(String), [
-      "lead-123",
-    ]);
-    expect(mockQuery).toHaveBeenNthCalledWith(5, "COMMIT");
+    expect(mockClient.query).toHaveBeenNthCalledWith(1, "BEGIN");
+
+    expect(mockClient.query).toHaveBeenNthCalledWith(
+      2,
+      convertLeadToClientQuery.insertCompany,
+      ["Acme Co", "client@test.com", "1234567890"],
+    );
+
+    expect(mockClient.query).toHaveBeenNthCalledWith(
+      3,
+      convertLeadToClientQuery.insertProject,
+      ["company-1", "Acme Co - business website"],
+    );
+
+    expect(supabaseAdmin.auth.admin.createUser).toHaveBeenCalledTimes(1);
+    expect(supabaseAdmin.auth.admin.createUser).toHaveBeenCalledWith({
+      email: "client@test.com",
+      email_confirm: true,
+      user_metadata: {
+        first_name: "Alex",
+        last_name: "Pham",
+      },
+    });
+
+    expect(mockClient.query).toHaveBeenNthCalledWith(
+      4,
+      convertLeadToClientQuery.insertClientUser,
+      ["auth-user-1", "company-1", "client@test.com", "Alex", "Pham"],
+    );
+
+    expect(mockClient.query).toHaveBeenNthCalledWith(
+      5,
+      convertLeadToClientQuery.updateLeadStatusToConverted,
+      ["lead-123"],
+    );
+
+    expect(mockClient.query).toHaveBeenNthCalledWith(6, "COMMIT");
+    expect(mockClient.release).toHaveBeenCalledTimes(1);
 
     expect(result).toEqual({
-      message: "Lead converted to client successfully",
+      message:
+        "Lead converted to client successfully. The client can now use first-time setup with an email code.",
       company: {
-        id: "company-123",
-        name: "Radiance",
-        primary_email: "alex@example.com",
+        id: "company-1",
+        name: "Acme Co",
+        primary_email: "client@test.com",
         primary_phone: "1234567890",
       },
       project: {
-        id: "project-123",
-        company_id: "company-123",
-        name: "Radiance - web app",
-        status: "active",
+        id: "project-1",
+        company_id: "company-1",
+        name: "Acme Co - business website",
+        status: "began",
+      },
+      clientUser: {
+        id: "client-user-1",
+        auth_user_id: "auth-user-1",
+        company_id: "company-1",
+        email: "client@test.com",
+        first_name: "Alex",
+        last_name: "Pham",
+        is_active: true,
+      },
+      lead: {
+        id: "lead-123",
+        status: "Converted to Client",
       },
     });
-
-    expect(mockRelease).toHaveBeenCalledTimes(1);
   });
 
-  it("should use custom projectName when provided", async () => {
-    mockQuery
-      .mockResolvedValueOnce({ rows: [] }) // BEGIN
+  it("uses the provided projectName when one is supplied", async () => {
+    mockClient.query
+      .mockResolvedValueOnce() // BEGIN
       .mockResolvedValueOnce({
         rows: [
           {
-            id: "company-123",
-            name: "Radiance",
-            primary_email: "alex@example.com",
-            primary_phone: "1234567890",
-          },
-        ],
-      }) // insertCompany
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            id: "project-123",
-            company_id: "company-123",
-            name: "Radiance Website Redesign",
-            status: "active",
-          },
-        ],
-      }) // insertProject
-      .mockResolvedValueOnce({
-        rows: [{ id: "lead-123", status: "Converted" }],
-      }) // updateLeadStatusToConverted
-      .mockResolvedValueOnce({ rows: [] }); // COMMIT
-
-    await convertLeadToClientService({
-      leadId: "lead-123",
-      companyName: "Radiance",
-      email: "alex@example.com",
-      phone: "1234567890",
-      projectType: "web app",
-      projectName: "Radiance Website Redesign",
-    });
-
-    expect(mockQuery).toHaveBeenNthCalledWith(3, expect.any(String), [
-      "company-123",
-      "Radiance Website Redesign",
-    ]);
-  });
-
-  it("should allow nullable email and phone", async () => {
-    mockQuery
-      .mockResolvedValueOnce({ rows: [] }) // BEGIN
-      .mockResolvedValueOnce({
-        rows: [
-          {
-            id: "company-123",
-            name: "Radiance",
-            primary_email: null,
+            id: "company-1",
+            name: "Acme Co",
+            primary_email: "client@test.com",
             primary_phone: null,
           },
         ],
-      }) // insertCompany
+      })
       .mockResolvedValueOnce({
         rows: [
           {
-            id: "project-123",
-            company_id: "company-123",
-            name: "Radiance - web app",
-            status: "active",
+            id: "project-1",
+            company_id: "company-1",
+            name: "Custom Project Name",
+            status: "began",
           },
         ],
-      }) // insertProject
+      })
       .mockResolvedValueOnce({
-        rows: [{ id: "lead-123", status: "Converted" }],
-      }) // updateLeadStatusToConverted
-      .mockResolvedValueOnce({ rows: [] }); // COMMIT
+        rows: [
+          {
+            id: "client-user-1",
+            auth_user_id: "auth-user-1",
+            company_id: "company-1",
+            email: "client@test.com",
+            first_name: null,
+            last_name: null,
+            is_active: true,
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: "lead-123",
+            status: "Converted to Client",
+          },
+        ],
+      })
+      .mockResolvedValueOnce(); // COMMIT
+
+    supabaseAdmin.auth.admin.createUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "auth-user-1",
+        },
+      },
+      error: null,
+    });
 
     await convertLeadToClientService({
       leadId: "lead-123",
-      companyName: "Radiance",
-      email: "",
+      companyName: "Acme Co",
+      email: "client@test.com",
       phone: "",
-      projectType: "web app",
-      projectName: "",
+      projectType: "Business Website",
+      projectName: "  Custom Project Name  ",
+      firstName: "",
+      lastName: "",
     });
 
-    expect(mockQuery).toHaveBeenNthCalledWith(2, expect.any(String), [
-      "Radiance",
-      null,
-      null,
-    ]);
+    expect(mockClient.query).toHaveBeenNthCalledWith(
+      3,
+      convertLeadToClientQuery.insertProject,
+      ["company-1", "Custom Project Name"],
+    );
   });
 
-  it("should rollback and throw when company insert fails", async () => {
-    const dbError = new Error("Database failure");
-
-    mockQuery
-      .mockResolvedValueOnce({ rows: [] }) // BEGIN
-      .mockRejectedValueOnce(dbError) // insertCompany
-      .mockResolvedValueOnce({ rows: [] }); // ROLLBACK
-
-    await expect(
-      convertLeadToClientService({
-        leadId: "lead-123",
-        companyName: "Radiance",
-        email: "alex@example.com",
-        phone: "1234567890",
-        projectType: "web app",
-        projectName: "",
-      }),
-    ).rejects.toThrow("Database failure");
-
-    expect(mockQuery).toHaveBeenNthCalledWith(1, "BEGIN");
-    expect(mockQuery).toHaveBeenNthCalledWith(3, "ROLLBACK");
-    expect(mockRelease).toHaveBeenCalledTimes(1);
-  });
-
-  it("should rollback and throw when project insert fails", async () => {
-    const dbError = new Error("Project insert failed");
-
-    mockQuery
-      .mockResolvedValueOnce({ rows: [] }) // BEGIN
+  it("rolls back and throws when createUser fails", async () => {
+    mockClient.query
+      .mockResolvedValueOnce() // BEGIN
       .mockResolvedValueOnce({
         rows: [
           {
-            id: "company-123",
-            name: "Radiance",
-            primary_email: "alex@example.com",
+            id: "company-1",
+            name: "Acme Co",
+            primary_email: "client@test.com",
             primary_phone: "1234567890",
           },
         ],
-      }) // insertCompany
-      .mockRejectedValueOnce(dbError) // insertProject
-      .mockResolvedValueOnce({ rows: [] }); // ROLLBACK
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: "project-1",
+            company_id: "company-1",
+            name: "Acme Co - business website",
+            status: "began",
+          },
+        ],
+      })
+      .mockResolvedValueOnce(); // ROLLBACK
+
+    supabaseAdmin.auth.admin.createUser.mockResolvedValue({
+      data: null,
+      error: {
+        message: "User already exists",
+      },
+    });
 
     await expect(
       convertLeadToClientService({
         leadId: "lead-123",
-        companyName: "Radiance",
-        email: "alex@example.com",
+        companyName: "Acme Co",
+        email: "client@test.com",
         phone: "1234567890",
-        projectType: "web app",
+        projectType: "Business Website",
         projectName: "",
+        firstName: "Alex",
+        lastName: "Pham",
       }),
-    ).rejects.toThrow("Project insert failed");
+    ).rejects.toMatchObject({
+      message: "User already exists",
+      statusCode: 400,
+    });
 
-    expect(mockQuery).toHaveBeenNthCalledWith(4, "ROLLBACK");
-    expect(mockRelease).toHaveBeenCalledTimes(1);
+    expect(mockClient.query).toHaveBeenLastCalledWith("ROLLBACK");
+    expect(mockClient.release).toHaveBeenCalledTimes(1);
   });
 
-  it("should rollback and throw when lead status update fails", async () => {
-    const dbError = new Error("Lead update failed");
-
-    mockQuery
-      .mockResolvedValueOnce({ rows: [] }) // BEGIN
+  it("rolls back and throws when auth user id is missing", async () => {
+    mockClient.query
+      .mockResolvedValueOnce() // BEGIN
       .mockResolvedValueOnce({
         rows: [
           {
-            id: "company-123",
-            name: "Radiance",
-            primary_email: "alex@example.com",
+            id: "company-1",
+            name: "Acme Co",
+            primary_email: "client@test.com",
             primary_phone: "1234567890",
           },
         ],
-      }) // insertCompany
+      })
       .mockResolvedValueOnce({
         rows: [
           {
-            id: "project-123",
-            company_id: "company-123",
-            name: "Radiance - web app",
-            status: "active",
+            id: "project-1",
+            company_id: "company-1",
+            name: "Acme Co - business website",
+            status: "began",
           },
         ],
-      }) // insertProject
-      .mockRejectedValueOnce(dbError) // updateLeadStatusToConverted
-      .mockResolvedValueOnce({ rows: [] }); // ROLLBACK
+      })
+      .mockResolvedValueOnce(); // ROLLBACK
+
+    supabaseAdmin.auth.admin.createUser.mockResolvedValue({
+      data: {
+        user: null,
+      },
+      error: null,
+    });
 
     await expect(
       convertLeadToClientService({
         leadId: "lead-123",
-        companyName: "Radiance",
-        email: "alex@example.com",
+        companyName: "Acme Co",
+        email: "client@test.com",
         phone: "1234567890",
-        projectType: "web app",
+        projectType: "Business Website",
         projectName: "",
+        firstName: "Alex",
+        lastName: "Pham",
       }),
-    ).rejects.toThrow("Lead update failed");
+    ).rejects.toMatchObject({
+      message: "Auth user was created without an id.",
+      statusCode: 500,
+    });
 
-    expect(mockQuery).toHaveBeenNthCalledWith(5, "ROLLBACK");
-    expect(mockRelease).toHaveBeenCalledTimes(1);
+    expect(mockClient.query).toHaveBeenLastCalledWith("ROLLBACK");
+    expect(mockClient.release).toHaveBeenCalledTimes(1);
+  });
+
+  it("rolls back and throws when inserting client_users fails", async () => {
+    mockClient.query
+      .mockResolvedValueOnce() // BEGIN
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: "company-1",
+            name: "Acme Co",
+            primary_email: "client@test.com",
+            primary_phone: "1234567890",
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        rows: [
+          {
+            id: "project-1",
+            company_id: "company-1",
+            name: "Acme Co - business website",
+            status: "began",
+          },
+        ],
+      })
+      .mockRejectedValueOnce(new Error("Insert client user failed"))
+      .mockResolvedValueOnce(); // ROLLBACK
+
+    supabaseAdmin.auth.admin.createUser.mockResolvedValue({
+      data: {
+        user: {
+          id: "auth-user-1",
+        },
+      },
+      error: null,
+    });
+
+    await expect(
+      convertLeadToClientService({
+        leadId: "lead-123",
+        companyName: "Acme Co",
+        email: "client@test.com",
+        phone: "1234567890",
+        projectType: "Business Website",
+        projectName: "",
+        firstName: "Alex",
+        lastName: "Pham",
+      }),
+    ).rejects.toThrow("Insert client user failed");
+
+    expect(mockClient.query).toHaveBeenLastCalledWith("ROLLBACK");
+    expect(mockClient.release).toHaveBeenCalledTimes(1);
   });
 });

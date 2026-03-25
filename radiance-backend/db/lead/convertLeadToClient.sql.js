@@ -11,9 +11,23 @@ module.exports = {
     RETURNING id, company_id, name, status
   `,
 
+  insertClientUser: `
+    INSERT INTO client_users (
+      auth_user_id,
+      company_id,
+      email,
+      first_name,
+      last_name,
+      is_active,
+      created_at
+    )
+    VALUES ($1, $2, $3, $4, $5, true, NOW())
+    RETURNING id, auth_user_id, company_id, email, first_name, last_name, is_active
+  `,
+
   updateLeadStatusToConverted: `
     UPDATE leads
-    SET status = 'Converted'
+    SET status = 'Converted to Client'
     WHERE id = $1
     RETURNING id, status
   `,

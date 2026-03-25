@@ -1,6 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-
+import type { LeadStatus } from "../../../../types/lead";
 import type { ApiResponse } from "../../response";
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 type ConvertLeadToClientPayload = {
   companyName: string;
@@ -8,6 +9,8 @@ type ConvertLeadToClientPayload = {
   phone: string;
   projectType: string;
   projectName?: string;
+  firstName: string;
+  lastName: string;
 };
 
 type ConvertLeadToClientResponse = ApiResponse<{
@@ -23,6 +26,19 @@ type ConvertLeadToClientResponse = ApiResponse<{
     company_id: string;
     name: string;
     status: string;
+  };
+  clientUser: {
+    id: string;
+    auth_user_id: string;
+    company_id: string;
+    email: string;
+    first_name: string | null;
+    last_name: string | null;
+    is_active: boolean;
+  };
+  lead: {
+    id: string;
+    status: LeadStatus;
   };
 }>;
 
@@ -47,13 +63,16 @@ export const convertLeadToClient = async (
     const data: ConvertLeadToClientResponse = await response.json();
 
     if (!response.ok || !data.success) {
-      throw new Error(data.error || "Failed to convert lead to client.");
+      throw new Error(
+        data.error ||
+          "Failed to convert lead to client and create portal user.",
+      );
     }
 
     return data;
   } catch (error) {
     throw error instanceof Error
       ? error
-      : new Error("Failed to convert lead to client.");
+      : new Error("Failed to convert lead to client and create portal user.");
   }
 };
