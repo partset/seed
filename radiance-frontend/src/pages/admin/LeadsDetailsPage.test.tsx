@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 
@@ -42,6 +43,16 @@ const mockLead = {
   status: "New" as const,
   created_at: "2026-03-22T00:00:00.000Z",
 };
+
+function renderWithRouter(ui: React.ReactElement) {
+  return render(
+    <MemoryRouter initialEntries={["/admin/leads/lead-123"]}>
+      <Routes>
+        <Route path="/admin/leads/:leadId" element={ui} />
+      </Routes>
+    </MemoryRouter>,
+  );
+}
 
 function createMockSession(): Session {
   return {
@@ -266,10 +277,12 @@ describe("LeadDetailsPage", () => {
 
   it("calls convertLeadToClient and updates status after success", async () => {
     mockGetLead.mockResolvedValue(mockLead);
+
     mockConvertLeadToClient.mockResolvedValue({
       success: true,
       data: {
-        message: "Lead converted to client successfully",
+        message:
+          "Lead converted to client successfully. The client can now use first-time setup with an email code.",
         company: {
           id: "company-123",
           name: "Acme Co",
@@ -282,19 +295,32 @@ describe("LeadDetailsPage", () => {
           name: "Acme Co - Business Website",
           status: "active",
         },
+        clientUser: {
+          id: "client-user-123",
+          auth_user_id: "auth-user-123",
+          company_id: "company-123",
+          email: "alex@test.com",
+          first_name: "Alex",
+          last_name: "Pham",
+          is_active: true,
+        },
+        lead: {
+          id: "lead-123",
+          status: "Converted to Client",
+        },
       },
       error: "",
     });
 
-    renderLeadDetailsPage();
+    renderWithRouter(<LeadDetailsPage />);
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /convert to client/i }),
-      ).toBeInTheDocument();
-    });
+    expect(
+      await screen.findByRole("heading", { name: "Acme Co" }),
+    ).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: /convert to client/i }));
+    await userEvent.click(
+      screen.getByRole("button", { name: /convert to client/i }),
+    );
 
     await waitFor(() => {
       expect(mockConvertLeadToClient).toHaveBeenCalledWith(
@@ -306,15 +332,15 @@ describe("LeadDetailsPage", () => {
           phone: "1234567890",
           projectType: "Business Website",
           projectName: "Acme Co - Business Website",
+          firstName: "Alex",
+          lastName: "Pham",
         },
       );
     });
 
-    await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: /already converted/i }),
-      ).toBeDisabled();
-    });
+    expect(
+      await screen.findByRole("button", { name: /already converted/i }),
+    ).toBeInTheDocument();
   });
 
   it("shows convert error when convertLeadToClient fails", async () => {

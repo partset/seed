@@ -7,9 +7,9 @@ import LeadEditForm, {
 import { useAdminAuth } from "../../hooks/useAdminAuth";
 import { getLead } from "../../services/api/lead/getLead/api";
 import { modifyLead } from "../../services/api/lead/modifyLead/api";
+import { convertLeadToClient } from "../../services/api/lead/convertToClient/api";
 import type { Lead } from "../../types/lead";
 import { formatDate } from "../../utils/formatDate";
-import { convertLeadToClient } from "../../services/api/lead/convertToClient/api";
 
 function mapLeadToFormValues(lead: Lead): LeadEditFormValues {
   return {
@@ -38,6 +38,7 @@ export default function LeadDetailsPage() {
   const [saveError, setSaveError] = useState("");
   const [isConverting, setIsConverting] = useState(false);
   const [convertError, setConvertError] = useState("");
+  const [convertSuccess, setConvertSuccess] = useState("");
 
   useEffect(() => {
     async function loadLead() {
@@ -86,6 +87,8 @@ export default function LeadDetailsPage() {
 
     setFormValues(mapLeadToFormValues(lead));
     setSaveError("");
+    setConvertError("");
+    setConvertSuccess("");
     setIsEditing(true);
   }
 
@@ -133,8 +136,9 @@ export default function LeadDetailsPage() {
     try {
       setIsConverting(true);
       setConvertError("");
+      setConvertSuccess("");
 
-      await convertLeadToClient(accessToken, leadId, {
+      const result = await convertLeadToClient(accessToken, leadId, {
         companyName: lead.company_name ?? "",
         email: lead.email ?? "",
         phone: lead.phone ?? "",
@@ -143,15 +147,18 @@ export default function LeadDetailsPage() {
           lead.company_name && lead.project_type
             ? `${lead.company_name} - ${lead.project_type}`
             : "",
+        firstName: lead.first_name ?? "",
+        lastName: lead.last_name ?? "",
       });
 
       const convertedLead: Lead = {
         ...lead,
-        status: "Converted to Client",
+        status: result.data.lead.status,
       };
 
       setLead(convertedLead);
       setFormValues(mapLeadToFormValues(convertedLead));
+      setConvertSuccess(result.data.message);
     } catch (err) {
       const message =
         err instanceof Error
@@ -283,6 +290,14 @@ export default function LeadDetailsPage() {
                 Return to Leads
               </Link>
             </div>
+          </div>
+        ) : null}
+
+        {!isLoading && !error && convertSuccess ? (
+          <div className="rounded-3xl border border-[rgba(134,239,172,0.35)] bg-[rgba(134,239,172,0.08)] px-6 py-4">
+            <p className="text-sm leading-7 text-[var(--color-success)]">
+              {convertSuccess}
+            </p>
           </div>
         ) : null}
 

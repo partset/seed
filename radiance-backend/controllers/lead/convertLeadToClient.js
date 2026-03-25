@@ -11,6 +11,8 @@ const convertLeadToClient = async (req, res, next) => {
       phone: req.body.phone,
       projectType: req.body.projectType,
       projectName: req.body.projectName,
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
     });
 
     return res.status(201).json({
