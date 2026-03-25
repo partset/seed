@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import AuthInput from "../../shared/auth/AuthInput";
 
@@ -44,6 +45,8 @@ export default function ClientLoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  const navigate = useNavigate();
+
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
 
@@ -73,13 +76,9 @@ export default function ClientLoginForm() {
     setErrors(INITIAL_ERRORS);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 700));
-
       console.log("Client login values:", values);
 
-      setErrors({
-        form: "Client authentication is not connected yet.",
-      });
+      navigate("/client/dashboard");
     } catch (error) {
       const message =
         error instanceof Error

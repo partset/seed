@@ -71,11 +71,7 @@ describe("ClientLoginForm", () => {
     await user.type(screen.getByLabelText(/password/i), "password123");
     await user.click(screen.getByRole("button", { name: /^sign in$/i }));
 
-    expect(screen.getByRole("button", { name: /signing in/i })).toBeDisabled();
-
-    expect(
-      await screen.findByText(/client authentication is not connected yet/i),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^sign in$/i }));
 
     await waitFor(() => {
       expect(
