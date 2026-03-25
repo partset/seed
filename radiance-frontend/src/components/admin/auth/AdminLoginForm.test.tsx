@@ -7,6 +7,7 @@ import { useAdminAuth } from "../../../hooks/useAdminAuth";
 
 const mockNavigate = vi.fn();
 const mockLogin = vi.fn();
+const mockLogout = vi.fn();
 
 vi.mock("react-router-dom", async () => {
   const actual =
@@ -37,8 +38,64 @@ describe("AdminLoginForm", () => {
       isAuthenticated: false,
       isLoading: false,
       login: mockLogin,
-      logout: vi.fn(),
+      logout: mockLogout,
     });
+  });
+
+  it("renders email, password, forgot password link, and sign in button", () => {
+    render(
+      <MemoryRouter>
+        <AdminLoginForm />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/password/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /forgot password/i }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /^sign in$/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("shows validation errors when submitted with empty fields", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <AdminLoginForm />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole("button", { name: /^sign in$/i }));
+
+    expect(await screen.findByText(/email is required/i)).toBeInTheDocument();
+    expect(
+      await screen.findByText(/password is required/i),
+    ).toBeInTheDocument();
+    expect(mockLogin).not.toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("toggles password visibility", async () => {
+    const user = userEvent.setup();
+
+    render(
+      <MemoryRouter>
+        <AdminLoginForm />
+      </MemoryRouter>,
+    );
+
+    const passwordInput = screen.getByLabelText(/password/i);
+
+    expect(passwordInput).toHaveAttribute("type", "password");
+
+    await user.click(screen.getByRole("button", { name: /show password/i }));
+    expect(passwordInput).toHaveAttribute("type", "text");
+
+    await user.click(screen.getByRole("button", { name: /hide password/i }));
+    expect(passwordInput).toHaveAttribute("type", "password");
   });
 
   it("navigates to /admin/leads after successful login", async () => {
@@ -53,7 +110,7 @@ describe("AdminLoginForm", () => {
 
     await user.type(screen.getByLabelText(/email/i), "alex@example.com");
     await user.type(screen.getByLabelText(/password/i), "password123");
-    await user.click(screen.getByRole("button", { name: /sign in/i }));
+    await user.click(screen.getByRole("button", { name: /^sign in$/i }));
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith({
@@ -62,7 +119,9 @@ describe("AdminLoginForm", () => {
       });
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith("/admin/leads");
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/admin/leads");
+    });
   });
 
   it("shows backend/auth error when login fails", async () => {
@@ -77,10 +136,45 @@ describe("AdminLoginForm", () => {
 
     await user.type(screen.getByLabelText(/email/i), "alex@example.com");
     await user.type(screen.getByLabelText(/password/i), "password123");
-    await user.click(screen.getByRole("button", { name: /sign in/i }));
+    await user.click(screen.getByRole("button", { name: /^sign in$/i }));
 
     expect(
       await screen.findByText("Invalid login credentials"),
     ).toBeInTheDocument();
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("disables submit button while submitting", async () => {
+    const user = userEvent.setup();
+
+    let resolveLogin: (() => void) | undefined;
+
+    mockLogin.mockImplementation(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveLogin = resolve;
+        }),
+    );
+
+    render(
+      <MemoryRouter>
+        <AdminLoginForm />
+      </MemoryRouter>,
+    );
+
+    await user.type(screen.getByLabelText(/email/i), "alex@example.com");
+    await user.type(screen.getByLabelText(/password/i), "password123");
+
+    const submitButton = screen.getByRole("button", { name: /^sign in$/i });
+    await user.click(submitButton);
+
+    expect(screen.getByRole("button", { name: /signing in/i })).toBeDisabled();
+
+    resolveLogin?.();
+
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith("/admin/leads");
+    });
   });
 });

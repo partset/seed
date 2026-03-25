@@ -8,6 +8,11 @@ import ContactPage from "./pages/ContactPage";
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import LeadsPage from "./pages/admin/LeadsPage";
 import LeadDetailsPage from "./pages/admin/LeadDetailsPage";
+import ClientLoginPage from "./pages/client/ClientLoginPage";
+import ClientDashboardPage from "./pages/client/ClientDashboardPage";
+import ClientDocumentViewerPage from "./pages/client/ClientDocumentViewerPage";
+import ClientDocumentsPage from "./pages/client/ClientDocumentsPage";
+import ClientUpdatesPage from "./pages/client/ClientUpdatesPage";
 
 export default function App() {
   return (
@@ -23,6 +28,14 @@ export default function App() {
             <Route path="/admin/leads" element={<LeadsPage />} />
             <Route path="/admin/leads/:leadId" element={<LeadDetailsPage />} />
           </Route>
+          <Route path="/client/login" element={<ClientLoginPage />} />
+          <Route path="/client/dashboard" element={<ClientDashboardPage />} />
+          <Route path="/client/documents" element={<ClientDocumentsPage />} />
+          <Route
+            path="/client/documents/:documentId"
+            element={<ClientDocumentViewerPage />}
+          />
+          <Route path="/client/updates" element={<ClientUpdatesPage />} />
         </Routes>
       </AdminAuthProvider>
     </BrowserRouter>

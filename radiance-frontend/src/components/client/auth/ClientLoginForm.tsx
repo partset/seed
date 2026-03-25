@@ -1,31 +1,51 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import type {
-  AdminLoginErrors,
-  AdminLoginFormValues,
-} from "../../../types/adminAuth";
-import {
-  hasAdminLoginErrors,
-  validateAdminLogin,
-} from "../../../utils/auth/adminLoginValidation";
+import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import AuthInput from "../../shared/auth/AuthInput";
-import { useAdminAuth } from "../../../hooks/useAdminAuth";
 
-const INITIAL_VALUES: AdminLoginFormValues = {
+type ClientLoginFormValues = {
+  email: string;
+  password: string;
+};
+
+type ClientLoginErrors = {
+  email?: string;
+  password?: string;
+  form?: string;
+};
+
+const INITIAL_VALUES: ClientLoginFormValues = {
   email: "",
   password: "",
 };
 
-const INITIAL_ERRORS: AdminLoginErrors = {};
+const INITIAL_ERRORS: ClientLoginErrors = {};
 
-export default function AdminLoginForm() {
-  const navigate = useNavigate();
-  const { login } = useAdminAuth();
+function validateClientLogin(values: ClientLoginFormValues): ClientLoginErrors {
+  const errors: ClientLoginErrors = {};
 
-  const [values, setValues] = useState<AdminLoginFormValues>(INITIAL_VALUES);
-  const [errors, setErrors] = useState<AdminLoginErrors>(INITIAL_ERRORS);
+  if (!values.email.trim()) {
+    errors.email = "Email is required.";
+  }
+
+  if (!values.password.trim()) {
+    errors.password = "Password is required.";
+  }
+
+  return errors;
+}
+
+function hasClientLoginErrors(errors: ClientLoginErrors) {
+  return Boolean(errors.email || errors.password || errors.form);
+}
+
+export default function ClientLoginForm() {
+  const [values, setValues] = useState<ClientLoginFormValues>(INITIAL_VALUES);
+  const [errors, setErrors] = useState<ClientLoginErrors>(INITIAL_ERRORS);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const navigate = useNavigate();
 
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     const { name, value } = event.target;
@@ -45,9 +65,9 @@ export default function AdminLoginForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    const validationErrors = validateAdminLogin(values);
+    const validationErrors = validateClientLogin(values);
 
-    if (hasAdminLoginErrors(validationErrors)) {
+    if (hasClientLoginErrors(validationErrors)) {
       setErrors(validationErrors);
       return;
     }
@@ -56,8 +76,9 @@ export default function AdminLoginForm() {
     setErrors(INITIAL_ERRORS);
 
     try {
-      await login(values);
-      navigate("/admin/leads");
+      console.log("Client login values:", values);
+
+      navigate("/client/dashboard");
     } catch (error) {
       const message =
         error instanceof Error
@@ -76,7 +97,7 @@ export default function AdminLoginForm() {
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       <div className="space-y-5">
         <AuthInput
-          id="admin-email"
+          id="client-email"
           name="email"
           type="email"
           label="Email"
@@ -90,7 +111,7 @@ export default function AdminLoginForm() {
 
         <div className="space-y-2">
           <AuthInput
-            id="admin-password"
+            id="client-password"
             name="password"
             type={showPassword ? "text" : "password"}
             label="Password"
@@ -112,7 +133,7 @@ export default function AdminLoginForm() {
             </button>
 
             <Link
-              to="/admin/forgot-password"
+              to="/client/forgot-password"
               className="text-[11px] uppercase tracking-[0.18em] text-[var(--color-muted)] transition duration-200 hover:text-[var(--color-primary)]"
             >
               Forgot Password
