@@ -3,7 +3,8 @@ const cors = require("cors");
 const { errorHandler } = require("./middleware/errorHandler");
 
 const leadRoutes = require("./routes/leadRoutes");
-const adminRoutes = require(".//routes/adminRoutes");
+const adminRoutes = require("./routes/adminRoutes");
+const utilRoutes = require("./routes/utilRoutes");
 
 const app = express();
 
@@ -12,7 +13,8 @@ app.use(express.json());
 
 app.use("/api/lead", leadRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/util", utilRoutes);    
 
-app.use(errorHandler);
+app.use(errorHandler); 
 
 module.exports = app;
