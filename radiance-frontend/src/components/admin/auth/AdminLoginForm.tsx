@@ -57,7 +57,7 @@ export default function AdminLoginForm() {
 
     try {
       await login(values);
-      navigate("/admin/leads");
+      navigate("/admin/");
     } catch (error) {
       const message =
         error instanceof Error

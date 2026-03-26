@@ -98,7 +98,7 @@ describe("AdminLoginForm", () => {
     expect(passwordInput).toHaveAttribute("type", "password");
   });
 
-  it("navigates to /admin/leads after successful login", async () => {
+  it("navigates to /admin after successful login", async () => {
     const user = userEvent.setup();
     mockLogin.mockResolvedValue(undefined);
 
@@ -120,7 +120,7 @@ describe("AdminLoginForm", () => {
     });
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/admin/leads");
+      expect(mockNavigate).toHaveBeenCalledWith("/admin/");
     });
   });
 
@@ -174,7 +174,7 @@ describe("AdminLoginForm", () => {
     resolveLogin?.();
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/admin/leads");
+      expect(mockNavigate).toHaveBeenCalledWith("/admin/");
     });
   });
 });
