@@ -7,7 +7,7 @@ module.exports = {
 
   insertProject: `
     INSERT INTO projects (company_id, name, status, created_at)
-    VALUES ($1, $2, 'began', NOW())
+    VALUES ($1, $2, 'planned', NOW())
     RETURNING id, company_id, name, status
   `,
 
@@ -27,7 +27,7 @@ module.exports = {
 
   updateLeadStatusToConverted: `
     UPDATE leads
-    SET status = 'Converted to Client'
+    SET status = 'converted to client'
     WHERE id = $1
     RETURNING id, status
   `,

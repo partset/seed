@@ -15,6 +15,9 @@ import ClientDashboardPage from "./pages/client/ClientDashboardPage";
 import ClientDocumentViewerPage from "./pages/client/ClientDocumentViewerPage";
 import ClientDocumentsPage from "./pages/client/ClientDocumentsPage";
 import ClientUpdatesPage from "./pages/client/ClientUpdatesPage";
+import AdminCompaniesPage from "./pages/admin/AdminCompaniesPage";
+import AdminProjectDetailsPage from "./pages/admin/AdminProjectDetailsPage";
+import AdminCompanyDetailsPage from "./pages/admin/AdminCompanyDetailsPage";
 
 export default function App() {
   return (
@@ -33,6 +36,15 @@ export default function App() {
               <Route
                 path="/admin/leads/:leadId"
                 element={<LeadDetailsPage />}
+              />
+              <Route path="/admin" element={<AdminCompaniesPage />} />
+              <Route
+                path="/admin/:companyId"
+                element={<AdminCompanyDetailsPage />}
+              />
+              <Route
+                path="/admin/:companyId/:projectId"
+                element={<AdminProjectDetailsPage />}
               />
             </Route>
 
