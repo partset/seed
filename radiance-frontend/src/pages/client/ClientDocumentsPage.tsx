@@ -1,17 +1,28 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import ClientDocumentsTable from "../../components/client/documents/ClientDocumentsTable";
-import { clientProjectDocuments } from "../../constants/clientPortalMockData";
+import { clientProjectDetailsById } from "../../constants/clientPortalMockData";
 
 export default function ClientDocumentsPage() {
   const navigate = useNavigate();
+  const { projectId } = useParams<{ projectId: string }>();
+
+  if (!projectId) {
+    return <Navigate to="/client" replace />;
+  }
+
+  const project = clientProjectDetailsById[projectId];
+
+  if (!project) {
+    return <Navigate to="/client" replace />;
+  }
 
   const sortedDocuments = useMemo(() => {
-    return [...clientProjectDocuments].sort(
+    return [...project.documents].sort(
       (a, b) =>
         new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
     );
-  }, []);
+  }, [project.documents]);
 
   return (
     <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
@@ -31,7 +42,7 @@ export default function ClientDocumentsPage() {
               </h1>
 
               <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--color-muted)] md:text-base">
-                Review all uploaded files for your project, including planning,
+                Review all uploaded files for this project, including planning,
                 design, billing, and status updates.
               </p>
             </div>
@@ -50,7 +61,7 @@ export default function ClientDocumentsPage() {
         <ClientDocumentsTable
           documents={sortedDocuments}
           onDocumentClick={(document) =>
-            navigate(`/client/documents/${document.id}`)
+            navigate(`/client/${projectId}/documents/${document.id}`)
           }
         />
       </section>

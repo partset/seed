@@ -47,3 +47,22 @@ export interface ClientSupportSummary {
   contactPhone: string;
   officeHours: string;
 }
+
+export type ClientProjectCard = {
+  id: string;
+  projectName: string;
+  companyName: string;
+  websiteStatus: string;
+  currentPhase: string;
+  nextStep: string;
+  clientVisibleSummary: string;
+};
+
+export type ClientProjectDetail = {
+  summary: ClientProjectSummary;
+  updates: ClientProjectUpdate[];
+  documents: ClientProjectDocument[];
+  milestones: ClientProjectMilestone[];
+  billing: ClientBillingSummary;
+  support: ClientSupportSummary;
+};

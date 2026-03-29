@@ -1,13 +1,24 @@
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import ClientDocumentViewer from "../../components/client/documents/ClientDocumentViewer";
-import { clientProjectDocuments } from "../../constants/clientPortalMockData";
+import { clientProjectDetailsById } from "../../constants/clientPortalMockData";
 
 export default function ClientDocumentViewerPage() {
-  const { documentId } = useParams<{ documentId: string }>();
+  const { projectId, documentId } = useParams<{
+    projectId: string;
+    documentId: string;
+  }>();
 
-  const document = clientProjectDocuments.find(
-    (item) => item.id === documentId,
-  );
+  if (!projectId) {
+    return <Navigate to="/client" replace />;
+  }
+
+  const project = clientProjectDetailsById[projectId];
+
+  if (!project) {
+    return <Navigate to="/client" replace />;
+  }
+
+  const document = project.documents.find((item) => item.id === documentId);
 
   if (!document) {
     return (
@@ -31,7 +42,7 @@ export default function ClientDocumentViewerPage() {
 
             <div className="mt-6">
               <Link
-                to="/client/documents"
+                to={`/client/${projectId}/documents`}
                 className="inline-flex rounded-full border border-white/10 bg-[var(--color-primary)] px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-black transition hover:opacity-90"
               >
                 Back to Documents
@@ -48,7 +59,7 @@ export default function ClientDocumentViewerPage() {
       <section className="mx-auto max-w-7xl space-y-6">
         <div>
           <Link
-            to="/client/documents"
+            to={`/client/${projectId}/documents`}
             className="inline-flex rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.14em] text-[var(--color-foreground)] transition hover:bg-white/5"
           >
             Back to Documents

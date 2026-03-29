@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import type { ClientProjectUpdate } from "../../../types/clientPortal";
 import ClientUpdatesTable from "../updates/ClientUpdatesTable";
 
@@ -11,6 +11,7 @@ export default function ClientUpdatesPanel({
   updates,
 }: ClientUpdatesPanelProps) {
   const navigate = useNavigate();
+  const { projectId } = useParams<{ projectId: string }>();
 
   const recentUpdates = useMemo(() => {
     return [...updates]
@@ -22,7 +23,7 @@ export default function ClientUpdatesPanel({
   }, [updates]);
 
   function handleViewAllClick() {
-    navigate("/client/updates");
+    navigate(`/client/${projectId}/updates`);
   }
 
   return (
