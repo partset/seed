@@ -1,41 +1,73 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CompanyGrid from "../../components/admin/companies/CompanyGrid";
 import CompanyStatCard from "../../components/admin/companies/CompanyStatCard";
-import { adminPortalMockCompanies } from "../../constants/adminPortalMockData";
+import { getAllCompanies } from "../../services/api/company/getAllCompanies/api";
+import { useAdminAuth } from "../../hooks/useAdminAuth";
+import type { Company } from "../../types/company";
 
 export default function AdminCompaniesPage() {
+  const { session } = useAdminAuth();
+  const accessToken = session?.access_token;
   const navigate = useNavigate();
+
   const [searchTerm, setSearchTerm] = useState("");
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadCompanies() {
+      if (!accessToken) {
+        setError("No active admin session found.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const data = await getAllCompanies(accessToken);
+        setCompanies(data);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to load companies.";
+        setError(message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadCompanies();
+  }, [accessToken]);
 
   const filteredCompanies = useMemo(() => {
     const normalizedSearchTerm = searchTerm.trim().toLowerCase();
 
     if (!normalizedSearchTerm) {
-      return adminPortalMockCompanies;
+      return companies;
     }
 
-    return adminPortalMockCompanies.filter((company) => {
+    return companies.filter((company) => {
       return (
         company.name.toLowerCase().includes(normalizedSearchTerm) ||
         company.primaryEmail.toLowerCase().includes(normalizedSearchTerm)
       );
     });
-  }, [searchTerm]);
+  }, [searchTerm, companies]);
 
   const totalProjects = useMemo(() => {
-    return adminPortalMockCompanies.reduce((total, company) => {
-      return total + company.projects.length;
+    return companies.reduce((total, company) => {
+      return total + company.totalProjects;
     }, 0);
-  }, []);
+  }, [companies]);
+
   const activeProjects = useMemo(() => {
-    return adminPortalMockCompanies.reduce((total, company) => {
-      return (
-        total +
-        company.projects.filter((project) => project.status === "active").length
-      );
+    return companies.reduce((total, company) => {
+      return total + company.activeProjects;
     }, 0);
-  }, []);
+  }, [companies]);
 
   function handleCompanyClick(companyId: string) {
     navigate(`/admin/${companyId}`);
@@ -64,11 +96,9 @@ export default function AdminCompaniesPage() {
                   and move into project-level admin management.
                 </p>
               </div>
+
               <div className="grid gap-3 sm:grid-cols-3">
-                <CompanyStatCard
-                  label="Companies"
-                  value={adminPortalMockCompanies.length}
-                />
+                <CompanyStatCard label="Companies" value={companies.length} />
                 <CompanyStatCard label="Projects" value={totalProjects} />
                 <CompanyStatCard
                   label="Active Projects"
@@ -106,8 +136,22 @@ export default function AdminCompaniesPage() {
               />
             </label>
           </div>
+
           <div className="mt-6">
-            {filteredCompanies.length === 0 ? (
+            {isLoading ? (
+              <div className="rounded-3xl border border-white/10 bg-black/20 px-6 py-12 text-center">
+                <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-muted)]">
+                  Loading companies...
+                </p>
+              </div>
+            ) : error ? (
+              <div className="rounded-3xl border border-red-400/20 bg-red-400/10 px-6 py-12 text-center">
+                <p className="text-sm uppercase tracking-[0.2em] text-red-200">
+                  Failed to load companies
+                </p>
+                <p className="mt-3 text-sm leading-7 text-red-100">{error}</p>
+              </div>
+            ) : filteredCompanies.length === 0 ? (
               <div className="rounded-3xl border border-white/10 bg-black/20 px-6 py-12 text-center">
                 <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-muted)]">
                   No companies found

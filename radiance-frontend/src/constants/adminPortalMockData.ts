@@ -9,7 +9,9 @@ export const adminPortalMockCompanies: AdminPortalCompanyRecord[] = [
     name: "Radiance Studio",
     primaryEmail: "hello@radiancestudio.co",
     primaryPhone: "(214) 555-0192",
-    createdAt: "2026-01-08T10:00:00.000Z",
+    totalProjects: 2,
+    activeProjects: 2,
+    latestProjectName: "Marketing Website Refresh",
     projects: [
       {
         id: "project-radiance-website",
@@ -44,7 +46,9 @@ export const adminPortalMockCompanies: AdminPortalCompanyRecord[] = [
     name: "Gequence",
     primaryEmail: "team@gequence.com",
     primaryPhone: "(972) 555-0118",
-    createdAt: "2026-02-12T14:00:00.000Z",
+    totalProjects: 1,
+    activeProjects: 1,
+    latestProjectName: "Landing Page Build",
     projects: [
       {
         id: "project-gequence-landing",
@@ -66,7 +70,9 @@ export const adminPortalMockCompanies: AdminPortalCompanyRecord[] = [
     name: "Northstar Legal Group",
     primaryEmail: "operations@northstarlegal.com",
     primaryPhone: "(469) 555-0177",
-    createdAt: "2025-12-19T16:00:00.000Z",
+    totalProjects: 1,
+    activeProjects: 1,
+    latestProjectName: "Brand System Expansion",
     projects: [
       {
         id: "project-northstar-brand",
