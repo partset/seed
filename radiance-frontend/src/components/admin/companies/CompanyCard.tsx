@@ -1,16 +1,11 @@
-import type { AdminPortalCompanyRecord } from "../../../types/company";
-import ProjectStatusBadge from "../projects/ProjectStatusBadge";
+import type { Company } from "../../../types/company";
 
 interface CompanyCardProps {
-  company: AdminPortalCompanyRecord;
+  company: Company;
   onClick?: (companyId: string) => void;
 }
 
 export default function CompanyCard({ company, onClick }: CompanyCardProps) {
-  const activeProjects = company.projects.filter(
-    (project) => project.status === "active",
-  ).length;
-
   return (
     <button
       type="button"
@@ -29,11 +24,8 @@ export default function CompanyCard({ company, onClick }: CompanyCardProps) {
             {company.name}
           </h2>
         </div>
-
-        {company.projects[0] ? (
-          <ProjectStatusBadge status={company.projects[0].status} />
-        ) : null}
       </div>
+
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
         <div>
           <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
@@ -60,7 +52,7 @@ export default function CompanyCard({ company, onClick }: CompanyCardProps) {
             Projects
           </p>
           <p className="mt-2 text-xl font-medium text-[var(--color-foreground)]">
-            {company.projects.length}
+            {company.totalProjects}
           </p>
         </div>
 
@@ -69,15 +61,16 @@ export default function CompanyCard({ company, onClick }: CompanyCardProps) {
             Active
           </p>
           <p className="mt-2 text-xl font-medium text-[var(--color-foreground)]">
-            {activeProjects}
+            {company.activeProjects}
           </p>
         </div>
+
         <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-3">
           <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
             Latest Project
           </p>
           <p className="mt-2 text-sm leading-6 text-[var(--color-foreground)]">
-            {company.projects[0]?.name || "No projects yet"}
+            {company.latestProjectName || "No projects yet"}
           </p>
         </div>
       </div>

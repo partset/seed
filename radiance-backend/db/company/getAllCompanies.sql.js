@@ -1,5 +1,5 @@
 module.exports = {
-  getCompanies: `
+  getAllCompanies: `
         SELECT
             c.id,
             c.name,

@@ -1,8 +1,8 @@
-import type { AdminPortalCompanyRecord } from "../../../types/company";
+import type { Company } from "../../../types/company";
 import CompanyCard from "./CompanyCard";
 
 interface CompanyGridProps {
-  companies: AdminPortalCompanyRecord[];
+  companies: Company[];
   onCompanyClick?: (companyId: string) => void;
 }
 
