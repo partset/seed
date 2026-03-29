@@ -1,19 +1,25 @@
+import { Navigate, useParams } from "react-router-dom";
 import ClientBillingPanel from "../../components/client/dashboard/ClientBillingPanel";
 import ClientDocumentsPanel from "../../components/client/dashboard/ClientDocumentsPanel";
 import ClientOverviewCard from "../../components/client/dashboard/ClientOverviewCard";
 import ClientProgressTimeline from "../../components/client/dashboard/ClientProgressTimeline";
 import ClientSupportPanel from "../../components/client/dashboard/ClientSupportPanel";
 import ClientUpdatesPanel from "../../components/client/dashboard/ClientUpdatesPanel";
-import {
-  clientBillingSummary,
-  clientProjectDocuments,
-  clientProjectMilestones,
-  clientProjectSummary,
-  clientProjectUpdates,
-  clientSupportSummary,
-} from "../../constants/clientPortalMockData";
+import { clientProjectDetailsById } from "../../constants/clientPortalMockData";
 
 export default function ClientDashboardPage() {
+  const { projectId } = useParams<{ projectId: string }>();
+
+  if (!projectId) {
+    return <Navigate to="/client" replace />;
+  }
+
+  const project = clientProjectDetailsById[projectId];
+
+  if (!project) {
+    return <Navigate to="/client" replace />;
+  }
+
   return (
     <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
       <section className="mx-auto max-w-7xl space-y-8">
@@ -42,7 +48,7 @@ export default function ClientDashboardPage() {
                 Project
               </p>
               <p className="mt-1 text-2xl font-medium text-[var(--color-foreground)]">
-                {clientProjectSummary.projectName}
+                {project.summary.projectName}
               </p>
             </div>
           </div>
@@ -51,42 +57,42 @@ export default function ClientDashboardPage() {
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <ClientOverviewCard
             eyebrow="Website Status"
-            title={clientProjectSummary.websiteStatus}
+            title={project.summary.websiteStatus}
             description="This is the current overall state of your project inside our workflow."
           />
 
           <ClientOverviewCard
             eyebrow="Current Phase"
-            title={clientProjectSummary.currentPhase}
+            title={project.summary.currentPhase}
             description="This shows the stage your website is currently in right now."
           />
 
           <ClientOverviewCard
             eyebrow="Next Step"
-            title={clientProjectSummary.nextStep}
+            title={project.summary.nextStep}
             description="This is the next action needed to keep the project moving smoothly."
           />
 
           <ClientOverviewCard
             eyebrow="Balance Due"
-            title={clientProjectSummary.balanceDue}
-            description={`Your next invoice is currently due on ${clientProjectSummary.invoiceDueDate}.`}
+            title={project.summary.balanceDue}
+            description={`Your next invoice is currently due on ${project.summary.invoiceDueDate}.`}
           />
         </section>
 
         <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
           <div className="space-y-6">
-            <ClientUpdatesPanel updates={clientProjectUpdates} />
-            <ClientProgressTimeline milestones={clientProjectMilestones} />
+            <ClientUpdatesPanel updates={project.updates} />
+            <ClientProgressTimeline milestones={project.milestones} />
           </div>
 
           <div className="space-y-6">
-            <ClientDocumentsPanel documents={clientProjectDocuments} />
-            <ClientBillingPanel billing={clientBillingSummary} />
+            <ClientDocumentsPanel documents={project.documents} />
+            <ClientBillingPanel billing={project.billing} />
           </div>
         </section>
 
-        <ClientSupportPanel support={clientSupportSummary} />
+        <ClientSupportPanel support={project.support} />
       </section>
     </main>
   );

@@ -11,6 +11,7 @@ import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import LeadsPage from "./pages/admin/LeadsPage";
 import LeadDetailsPage from "./pages/admin/LeadDetailsPage";
 import ClientLoginPage from "./pages/client/ClientLoginPage";
+import ClientProjectsPage from "./pages/client/ClientProjectsPage";
 import ClientDashboardPage from "./pages/client/ClientDashboardPage";
 import ClientDocumentViewerPage from "./pages/client/ClientDocumentViewerPage";
 import ClientDocumentsPage from "./pages/client/ClientDocumentsPage";
@@ -51,19 +52,24 @@ export default function App() {
             <Route path="/client/login" element={<ClientLoginPage />} />
 
             <Route element={<ClientProtectedRoute />}>
+              <Route path="/client" element={<ClientProjectsPage />} />
               <Route
-                path="/client/dashboard"
+                path="/client/:projectId"
                 element={<ClientDashboardPage />}
               />
+
               <Route
-                path="/client/documents"
+                path="/client/:projectId/documents"
                 element={<ClientDocumentsPage />}
               />
               <Route
-                path="/client/documents/:documentId"
+                path="/client/:projectId/documents/:documentId"
                 element={<ClientDocumentViewerPage />}
               />
-              <Route path="/client/updates" element={<ClientUpdatesPage />} />
+              <Route
+                path="/client/:projectId/updates"
+                element={<ClientUpdatesPage />}
+              />
             </Route>
           </Routes>
         </ClientAuthProvider>

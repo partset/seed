@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import type { ClientProjectDocument } from "../../../types/clientPortal";
 
 interface ClientDocumentsPanelProps {
@@ -10,6 +10,7 @@ export default function ClientDocumentsPanel({
   documents,
 }: ClientDocumentsPanelProps) {
   const navigate = useNavigate();
+  const { projectId } = useParams<{ projectId: string }>();
 
   const recentDocuments = useMemo(() => {
     return [...documents]
@@ -21,11 +22,11 @@ export default function ClientDocumentsPanel({
   }, [documents]);
 
   function handleViewAllClick() {
-    navigate("/client/documents");
+    navigate(`/client/${projectId}/documents`);
   }
 
   function handleDocumentClick(documentId: string) {
-    navigate(`/client/documents/${documentId}`);
+    navigate(`/client/${projectId}/documents/${documentId}`);
   }
 
   return (

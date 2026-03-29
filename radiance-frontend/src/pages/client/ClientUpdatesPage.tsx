@@ -1,14 +1,27 @@
 import { useMemo } from "react";
+import { Navigate, useParams } from "react-router-dom";
 import ClientUpdatesTable from "../../components/client/updates/ClientUpdatesTable";
-import { clientProjectUpdates } from "../../constants/clientPortalMockData";
+import { clientProjectDetailsById } from "../../constants/clientPortalMockData";
 
 export default function ClientUpdatesPage() {
+  const { projectId } = useParams<{ projectId: string }>();
+
+  if (!projectId) {
+    return <Navigate to="/client" replace />;
+  }
+
+  const project = clientProjectDetailsById[projectId];
+
+  if (!project) {
+    return <Navigate to="/client" replace />;
+  }
+
   const sortedUpdates = useMemo(() => {
-    return [...clientProjectUpdates].sort(
+    return [...project.updates].sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-  }, []);
+  }, [project.updates]);
 
   return (
     <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
