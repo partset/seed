@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { vi } from "vitest";
 import ClientDocumentsPage from "./ClientDocumentsPage";
 
@@ -14,6 +15,10 @@ vi.mock("react-router-dom", async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useParams: () => ({
+      projectId: "project-1",
+    }),
+    Navigate: () => <div data-testid="navigate-redirect" />,
   };
 });
 
@@ -28,41 +33,45 @@ vi.mock("../../components/client/documents/ClientDocumentsTable", () => ({
 }));
 
 vi.mock("../../constants/clientPortalMockData", () => ({
-  clientProjectDocuments: [
-    {
-      id: "doc-1",
-      title: "Brand Questionnaire",
-      description: "Initial discovery questionnaire.",
-      category: "Discovery",
-      fileType: "PDF",
-      uploadedAtLabel: "Mar 20, 2026",
-      uploadedAt: "2026-03-20T10:00:00.000Z",
-      fileSizeLabel: "1.2 MB",
-      embedUrl: "https://example.com/doc-1",
+  clientProjectDetailsById: {
+    "project-1": {
+      documents: [
+        {
+          id: "doc-1",
+          title: "Brand Questionnaire",
+          description: "Initial discovery questionnaire.",
+          category: "Discovery",
+          fileType: "PDF",
+          uploadedAtLabel: "Mar 20, 2026",
+          uploadedAt: "2026-03-20T10:00:00.000Z",
+          fileSizeLabel: "1.2 MB",
+          embedUrl: "https://example.com/doc-1",
+        },
+        {
+          id: "doc-2",
+          title: "Homepage Wireframe",
+          description: "Homepage wireframe for review.",
+          category: "Design",
+          fileType: "PNG",
+          uploadedAtLabel: "Mar 24, 2026",
+          uploadedAt: "2026-03-24T10:00:00.000Z",
+          fileSizeLabel: "850 KB",
+          embedUrl: "https://example.com/doc-2",
+        },
+        {
+          id: "doc-3",
+          title: "Final Proposal",
+          description: "Final approved proposal.",
+          category: "Proposal",
+          fileType: "PDF",
+          uploadedAtLabel: "Mar 18, 2026",
+          uploadedAt: "2026-03-18T10:00:00.000Z",
+          fileSizeLabel: "2.4 MB",
+          embedUrl: "https://example.com/doc-3",
+        },
+      ],
     },
-    {
-      id: "doc-2",
-      title: "Homepage Wireframe",
-      description: "Homepage wireframe for review.",
-      category: "Design",
-      fileType: "PNG",
-      uploadedAtLabel: "Mar 24, 2026",
-      uploadedAt: "2026-03-24T10:00:00.000Z",
-      fileSizeLabel: "850 KB",
-      embedUrl: "https://example.com/doc-2",
-    },
-    {
-      id: "doc-3",
-      title: "Final Proposal",
-      description: "Final approved proposal.",
-      category: "Proposal",
-      fileType: "PDF",
-      uploadedAtLabel: "Mar 18, 2026",
-      uploadedAt: "2026-03-18T10:00:00.000Z",
-      fileSizeLabel: "2.4 MB",
-      embedUrl: "https://example.com/doc-3",
-    },
-  ],
+  },
 }));
 
 describe("ClientDocumentsPage", () => {
@@ -71,7 +80,11 @@ describe("ClientDocumentsPage", () => {
   });
 
   it("renders page hero content and total document count", () => {
-    render(<ClientDocumentsPage />);
+    render(
+      <MemoryRouter>
+        <ClientDocumentsPage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByText(/client portal/i)).toBeInTheDocument();
     expect(
@@ -79,7 +92,7 @@ describe("ClientDocumentsPage", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText(
-        /review all uploaded files for your project, including planning, design, billing, and status updates/i,
+        /review all uploaded files for this project, including planning, design, billing, and status updates/i,
       ),
     ).toBeInTheDocument();
 
@@ -90,7 +103,11 @@ describe("ClientDocumentsPage", () => {
   });
 
   it("passes sorted documents to ClientDocumentsTable", () => {
-    render(<ClientDocumentsPage />);
+    render(
+      <MemoryRouter>
+        <ClientDocumentsPage />
+      </MemoryRouter>,
+    );
 
     expect(mockClientDocumentsTable).toHaveBeenCalledTimes(1);
 
@@ -103,7 +120,11 @@ describe("ClientDocumentsPage", () => {
   });
 
   it("navigates to the selected document when onDocumentClick is called", () => {
-    render(<ClientDocumentsPage />);
+    render(
+      <MemoryRouter>
+        <ClientDocumentsPage />
+      </MemoryRouter>,
+    );
 
     const passedProps = mockClientDocumentsTable.mock.calls[0][0];
 
@@ -111,6 +132,8 @@ describe("ClientDocumentsPage", () => {
       id: "doc-2",
     });
 
-    expect(mockNavigate).toHaveBeenCalledWith("/client/documents/doc-2");
+    expect(mockNavigate).toHaveBeenCalledWith(
+      "/client/project-1/documents/doc-2",
+    );
   });
 });

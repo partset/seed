@@ -1,7 +1,7 @@
-import type { AdminPortalCompanyRecord } from "../../../types/company";
+import type { Company } from "../../../types/company";
 
 interface CompanyOverviewCardProps {
-  company: AdminPortalCompanyRecord;
+  company: Company;
 }
 
 export default function CompanyOverviewCard({
@@ -31,11 +31,12 @@ export default function CompanyOverviewCard({
             Total Projects
           </p>
           <p className="mt-2 text-2xl font-medium text-[var(--color-foreground)]">
-            {company.projects.length}
+            {company.totalProjects}
           </p>
         </div>
       </div>
-      <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+
+      <div className="mt-6 grid gap-4 md:grid-cols-2">
         <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
           <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
             Primary Email
@@ -51,15 +52,6 @@ export default function CompanyOverviewCard({
           </p>
           <p className="mt-2 text-sm leading-7 text-[var(--color-foreground)]">
             {company.primaryPhone || "Not provided"}
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-white/10 bg-black/20 px-4 py-4">
-          <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
-            Company Created
-          </p>
-          <p className="mt-2 text-sm leading-7 text-[var(--color-foreground)]">
-            {new Date(company.createdAt).toLocaleDateString()}
           </p>
         </div>
       </div>

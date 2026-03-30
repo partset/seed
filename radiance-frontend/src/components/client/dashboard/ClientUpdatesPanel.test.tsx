@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import ClientUpdatesPanel from "./ClientUpdatesPanel";
@@ -16,6 +17,9 @@ vi.mock("react-router-dom", async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useParams: () => ({
+      projectId: "project-1",
+    }),
   };
 });
 
@@ -64,7 +68,11 @@ describe("ClientUpdatesPanel", () => {
   });
 
   it("renders the panel content", () => {
-    render(<ClientUpdatesPanel updates={mockUpdates} />);
+    render(
+      <MemoryRouter>
+        <ClientUpdatesPanel updates={mockUpdates} />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByText(/project activity/i)).toBeInTheDocument();
     expect(
@@ -78,7 +86,11 @@ describe("ClientUpdatesPanel", () => {
   });
 
   it("passes the 3 most recent updates to ClientUpdatesTable", () => {
-    render(<ClientUpdatesPanel updates={mockUpdates} />);
+    render(
+      <MemoryRouter>
+        <ClientUpdatesPanel updates={mockUpdates} />
+      </MemoryRouter>,
+    );
 
     expect(mockClientUpdatesTable).toHaveBeenCalledTimes(1);
 
@@ -93,10 +105,14 @@ describe("ClientUpdatesPanel", () => {
   it("navigates to the updates page when view all is clicked", async () => {
     const user = userEvent.setup();
 
-    render(<ClientUpdatesPanel updates={mockUpdates} />);
+    render(
+      <MemoryRouter>
+        <ClientUpdatesPanel updates={mockUpdates} />
+      </MemoryRouter>,
+    );
 
     await user.click(screen.getByRole("button", { name: /view all/i }));
 
-    expect(mockNavigate).toHaveBeenCalledWith("/client/updates");
+    expect(mockNavigate).toHaveBeenCalledWith("/client/project-1/updates");
   });
 });

@@ -1,8 +1,24 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { vi } from "vitest";
 import ClientUpdatesPage from "./ClientUpdatesPage";
 
 const mockClientUpdatesTable = vi.fn();
+
+vi.mock("react-router-dom", async () => {
+  const actual =
+    await vi.importActual<typeof import("react-router-dom")>(
+      "react-router-dom",
+    );
+
+  return {
+    ...actual,
+    useParams: () => ({
+      projectId: "project-1",
+    }),
+    Navigate: () => <div data-testid="navigate-redirect" />,
+  };
+});
 
 vi.mock("../../components/client/updates/ClientUpdatesTable", () => ({
   default: (props: { updates: Array<{ id: string; createdAt: string }> }) => {
@@ -12,29 +28,33 @@ vi.mock("../../components/client/updates/ClientUpdatesTable", () => ({
 }));
 
 vi.mock("../../constants/clientPortalMockData", () => ({
-  clientProjectUpdates: [
-    {
-      id: "update-1",
-      title: "Homepage feedback added",
-      description: "Client feedback was added to the homepage draft.",
-      dateLabel: "Mar 20, 2026",
-      createdAt: "2026-03-20T10:00:00.000Z",
+  clientProjectDetailsById: {
+    "project-1": {
+      updates: [
+        {
+          id: "update-1",
+          title: "Homepage feedback added",
+          description: "Client feedback was added to the homepage draft.",
+          dateLabel: "Mar 20, 2026",
+          createdAt: "2026-03-20T10:00:00.000Z",
+        },
+        {
+          id: "update-2",
+          title: "Wireframe approved",
+          description: "The wireframe was approved and moved forward.",
+          dateLabel: "Mar 24, 2026",
+          createdAt: "2026-03-24T10:00:00.000Z",
+        },
+        {
+          id: "update-3",
+          title: "Proposal sent",
+          description: "Initial proposal was sent to the client.",
+          dateLabel: "Mar 18, 2026",
+          createdAt: "2026-03-18T10:00:00.000Z",
+        },
+      ],
     },
-    {
-      id: "update-2",
-      title: "Wireframe approved",
-      description: "The wireframe was approved and moved forward.",
-      dateLabel: "Mar 24, 2026",
-      createdAt: "2026-03-24T10:00:00.000Z",
-    },
-    {
-      id: "update-3",
-      title: "Proposal sent",
-      description: "Initial proposal was sent to the client.",
-      dateLabel: "Mar 18, 2026",
-      createdAt: "2026-03-18T10:00:00.000Z",
-    },
-  ],
+  },
 }));
 
 describe("ClientUpdatesPage", () => {
@@ -43,7 +63,11 @@ describe("ClientUpdatesPage", () => {
   });
 
   it("renders page hero content and total update count", () => {
-    render(<ClientUpdatesPage />);
+    render(
+      <MemoryRouter>
+        <ClientUpdatesPage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByText(/client portal/i)).toBeInTheDocument();
     expect(
@@ -62,7 +86,11 @@ describe("ClientUpdatesPage", () => {
   });
 
   it("passes updates sorted by newest createdAt first", () => {
-    render(<ClientUpdatesPage />);
+    render(
+      <MemoryRouter>
+        <ClientUpdatesPage />
+      </MemoryRouter>,
+    );
 
     expect(mockClientUpdatesTable).toHaveBeenCalledTimes(1);
 

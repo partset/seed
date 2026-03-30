@@ -1,26 +1,91 @@
-import { useMemo } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useAdminAuth } from "../../hooks/useAdminAuth";
 import CompanyOverviewCard from "../../components/admin/company/CompanyOverviewCard";
 import CompanyStatCard from "../../components/admin/companies/CompanyStatCard";
 import ProjectGrid from "../../components/admin/projects/ProjectGrid";
-import { adminPortalMockCompanies } from "../../constants/adminPortalMockData";
+import type { Project } from "../../types/project";
+import type { Company } from "../../types/company";
+import { getProjectByCompanyId } from "../../services/api/project/getProjectByCompanyId/api";
+
+type LocationState = {
+  company?: Company;
+};
 
 export default function AdminCompanyDetailsPage() {
+  const { session } = useAdminAuth();
+  const accessToken = session?.access_token;
+
   const navigate = useNavigate();
+  const location = useLocation();
   const { companyId } = useParams();
 
-  const company = useMemo(() => {
-    return (
-      adminPortalMockCompanies.find((item) => item.id === companyId) ?? null
-    );
-  }, [companyId]);
+  const company = (location.state as LocationState | null)?.company ?? null;
 
-  function handleProjectClick(projectId: string) {
-    if (!company) {
-      return;
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function loadProjects() {
+      if (!accessToken) {
+        setError("No active admin session found.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!companyId) {
+        setError("No company ID provided in URL.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const data = await getProjectByCompanyId(accessToken, companyId);
+        setProjects(data);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to load projects.";
+        setError(message);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
-    navigate(`/admin/${company.id}/${projectId}`);
+    loadProjects();
+  }, [accessToken, companyId]);
+
+  function handleProjectClick(projectId: string) {
+    if (!companyId) return;
+    navigate(`/admin/${companyId}/${projectId}`);
+  }
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
+        <section className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center">
+          <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-muted)]">
+            Loading company details...
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
+        <section className="mx-auto max-w-7xl rounded-3xl border border-red-400/20 bg-red-400/10 px-6 py-12 text-center">
+          <p className="text-sm uppercase tracking-[0.2em] text-red-200">
+            Failed to load company details
+          </p>
+          <p className="mt-3 text-sm leading-7 text-red-100">{error}</p>
+        </section>
+      </main>
+    );
   }
 
   if (!company) {
@@ -34,18 +99,19 @@ export default function AdminCompanyDetailsPage() {
             Company Not Found
           </h1>
           <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
-            The requested company record could not be found in the mock data.
+            Company details were not passed to this page. Please return to the
+            companies page and open the company again.
           </p>
         </section>
       </main>
     );
   }
 
-  const activeProjects = company.projects.filter(
+  const activeProjects = projects.filter(
     (project) => project.status === "active",
   ).length;
 
-  const completedProjects = company.projects.filter(
+  const completedProjects = projects.filter(
     (project) => project.status === "completed",
   ).length;
 
@@ -63,7 +129,7 @@ export default function AdminCompanyDetailsPage() {
         <CompanyOverviewCard company={company} />
 
         <section className="mt-8 grid gap-4 md:grid-cols-3">
-          <CompanyStatCard label="Projects" value={company.projects.length} />
+          <CompanyStatCard label="Projects" value={projects.length} />
           <CompanyStatCard label="Active" value={activeProjects} />
           <CompanyStatCard label="Completed" value={completedProjects} />
         </section>
@@ -84,7 +150,7 @@ export default function AdminCompanyDetailsPage() {
             </div>
           </div>
 
-          {company.projects.length === 0 ? (
+          {projects.length === 0 ? (
             <div className="rounded-2xl border border-white/10 bg-black/20 px-6 py-12 text-center">
               <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-muted)]">
                 No projects yet
@@ -96,7 +162,7 @@ export default function AdminCompanyDetailsPage() {
             </div>
           ) : (
             <ProjectGrid
-              projects={company.projects}
+              projects={projects}
               onProjectClick={handleProjectClick}
             />
           )}

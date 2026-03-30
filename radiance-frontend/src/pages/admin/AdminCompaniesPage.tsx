@@ -69,8 +69,10 @@ export default function AdminCompaniesPage() {
     }, 0);
   }, [companies]);
 
-  function handleCompanyClick(companyId: string) {
-    navigate(`/admin/${companyId}`);
+  function handleCompanyClick(company: Company) {
+    navigate(`/admin/${company.id}`, {
+      state: { company },
+    });
   }
 
   return (

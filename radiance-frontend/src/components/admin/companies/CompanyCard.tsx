@@ -2,14 +2,14 @@ import type { Company } from "../../../types/company";
 
 interface CompanyCardProps {
   company: Company;
-  onClick?: (companyId: string) => void;
+  onClick?: (company: Company) => void;
 }
 
 export default function CompanyCard({ company, onClick }: CompanyCardProps) {
   return (
     <button
       type="button"
-      onClick={() => onClick?.(company.id)}
+      onClick={() => onClick?.(company)}
       className="w-full rounded-3xl border border-white/10 bg-white/5 p-5 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">

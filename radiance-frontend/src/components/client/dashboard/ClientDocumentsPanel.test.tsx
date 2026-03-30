@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import userEvent from "@testing-library/user-event";
 import { vi } from "vitest";
 import ClientDocumentsPanel from "./ClientDocumentsPanel";
@@ -15,6 +16,9 @@ vi.mock("react-router-dom", async () => {
   return {
     ...actual,
     useNavigate: () => mockNavigate,
+    useParams: () => ({
+      projectId: "project-1",
+    }),
   };
 });
 
@@ -71,7 +75,11 @@ describe("ClientDocumentsPanel", () => {
   });
 
   it("renders panel heading and latest 3 documents only", () => {
-    render(<ClientDocumentsPanel documents={mockDocuments} />);
+    render(
+      <MemoryRouter>
+        <ClientDocumentsPanel documents={mockDocuments} />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByText(/shared files/i)).toBeInTheDocument();
     expect(
@@ -83,7 +91,6 @@ describe("ClientDocumentsPanel", () => {
       ),
     ).toBeInTheDocument();
 
-    // newest 3: doc-4, doc-2, doc-1
     expect(screen.getByText(/launch checklist/i)).toBeInTheDocument();
     expect(screen.getByText(/homepage wireframe/i)).toBeInTheDocument();
     expect(screen.getByText(/brand questionnaire/i)).toBeInTheDocument();
@@ -94,31 +101,47 @@ describe("ClientDocumentsPanel", () => {
   it("navigates to document details when a row is clicked", async () => {
     const user = userEvent.setup();
 
-    render(<ClientDocumentsPanel documents={mockDocuments} />);
+    render(
+      <MemoryRouter>
+        <ClientDocumentsPanel documents={mockDocuments} />
+      </MemoryRouter>,
+    );
 
     await user.click(screen.getByText(/launch checklist/i));
 
-    expect(mockNavigate).toHaveBeenCalledWith("/client/documents/doc-4");
+    expect(mockNavigate).toHaveBeenCalledWith(
+      "/client/project-1/documents/doc-4",
+    );
   });
 
   it("navigates to document details when the view button is clicked", async () => {
     const user = userEvent.setup();
 
-    render(<ClientDocumentsPanel documents={mockDocuments} />);
+    render(
+      <MemoryRouter>
+        <ClientDocumentsPanel documents={mockDocuments} />
+      </MemoryRouter>,
+    );
 
     const viewButtons = screen.getAllByRole("button", { name: /^view$/i });
     await user.click(viewButtons[0]);
 
-    expect(mockNavigate).toHaveBeenCalledWith("/client/documents/doc-4");
+    expect(mockNavigate).toHaveBeenCalledWith(
+      "/client/project-1/documents/doc-4",
+    );
   });
 
   it("navigates to all documents page when view all is clicked", async () => {
     const user = userEvent.setup();
 
-    render(<ClientDocumentsPanel documents={mockDocuments} />);
+    render(
+      <MemoryRouter>
+        <ClientDocumentsPanel documents={mockDocuments} />
+      </MemoryRouter>,
+    );
 
     await user.click(screen.getByRole("button", { name: /view all/i }));
 
-    expect(mockNavigate).toHaveBeenCalledWith("/client/documents");
+    expect(mockNavigate).toHaveBeenCalledWith("/client/project-1/documents");
   });
 });

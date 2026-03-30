@@ -3,7 +3,7 @@ import CompanyCard from "./CompanyCard";
 
 interface CompanyGridProps {
   companies: Company[];
-  onCompanyClick?: (companyId: string) => void;
+  onCompanyClick?: (company: Company) => void;
 }
 
 export default function CompanyGrid({

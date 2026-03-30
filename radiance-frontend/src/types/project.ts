@@ -7,9 +7,7 @@ export type ProjectStatus =
 
 export interface Project {
   id: string;
-  companyId: string;
   name: string;
-  createdAt: string;
   currentPhase: string;
   nextStep: string;
   startDate: string | null;
