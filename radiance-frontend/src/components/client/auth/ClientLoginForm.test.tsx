@@ -99,7 +99,7 @@ describe("ClientLoginForm", () => {
     });
 
     await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith("/client/dashboard", {
+      expect(mockNavigate).toHaveBeenCalledWith("/client/", {
         replace: true,
       });
     });

@@ -1,6 +1,22 @@
 import { render, screen } from "@testing-library/react";
+import { MemoryRouter } from "react-router-dom";
 import { vi } from "vitest";
 import ClientDashboardPage from "./ClientDashboardPage";
+
+vi.mock("react-router-dom", async () => {
+  const actual =
+    await vi.importActual<typeof import("react-router-dom")>(
+      "react-router-dom",
+    );
+
+  return {
+    ...actual,
+    useParams: () => ({
+      projectId: "project-1",
+    }),
+    Navigate: () => <div data-testid="navigate-redirect" />,
+  };
+});
 
 vi.mock("../../components/client/dashboard/ClientBillingPanel", () => ({
   default: ({ billing }: { billing: { invoiceLabel: string } }) => (
@@ -51,32 +67,40 @@ vi.mock("../../components/client/dashboard/ClientUpdatesPanel", () => ({
 }));
 
 vi.mock("../../constants/clientPortalMockData", () => ({
-  clientBillingSummary: {
-    invoiceLabel: "Invoice #999",
-  },
-  clientProjectDocuments: [{ id: "doc-1" }, { id: "doc-2" }],
-  clientProjectMilestones: [
-    { id: "milestone-1" },
-    { id: "milestone-2" },
-    { id: "milestone-3" },
-  ],
-  clientProjectSummary: {
-    projectName: "Radiance Redesign",
-    websiteStatus: "In Progress",
-    currentPhase: "Design",
-    nextStep: "Approve Homepage",
-    balanceDue: "$1,500",
-    invoiceDueDate: "April 15, 2026",
-  },
-  clientProjectUpdates: [{ id: "update-1" }, { id: "update-2" }],
-  clientSupportSummary: {
-    contactName: "Radiance Support Team",
+  clientProjectDetailsById: {
+    "project-1": {
+      summary: {
+        projectName: "Radiance Redesign",
+        websiteStatus: "In Progress",
+        currentPhase: "Design",
+        nextStep: "Approve Homepage",
+        balanceDue: "$1,500",
+        invoiceDueDate: "April 15, 2026",
+      },
+      updates: [{ id: "update-1" }, { id: "update-2" }],
+      milestones: [
+        { id: "milestone-1" },
+        { id: "milestone-2" },
+        { id: "milestone-3" },
+      ],
+      documents: [{ id: "doc-1" }, { id: "doc-2" }],
+      billing: {
+        invoiceLabel: "Invoice #999",
+      },
+      support: {
+        contactName: "Radiance Support Team",
+      },
+    },
   },
 }));
 
 describe("ClientDashboardPage", () => {
   it("renders the dashboard hero content", () => {
-    render(<ClientDashboardPage />);
+    render(
+      <MemoryRouter>
+        <ClientDashboardPage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByText(/client portal/i)).toBeInTheDocument();
     expect(
@@ -93,7 +117,11 @@ describe("ClientDashboardPage", () => {
   });
 
   it("renders all four overview cards with the correct content", () => {
-    render(<ClientDashboardPage />);
+    render(
+      <MemoryRouter>
+        <ClientDashboardPage />
+      </MemoryRouter>,
+    );
 
     const overviewCards = screen.getAllByTestId("overview-card");
     expect(overviewCards).toHaveLength(4);
@@ -115,7 +143,11 @@ describe("ClientDashboardPage", () => {
   });
 
   it("renders the child dashboard sections with the correct mock data", () => {
-    render(<ClientDashboardPage />);
+    render(
+      <MemoryRouter>
+        <ClientDashboardPage />
+      </MemoryRouter>,
+    );
 
     expect(screen.getByTestId("updates-panel")).toHaveTextContent("Updates: 2");
     expect(screen.getByTestId("progress-timeline")).toHaveTextContent(

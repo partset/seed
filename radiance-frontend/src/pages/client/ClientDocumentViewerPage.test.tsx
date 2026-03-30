@@ -14,6 +14,7 @@ vi.mock("react-router-dom", async () => {
   return {
     ...actual,
     useParams: () => mockUseParams(),
+    Navigate: () => <div data-testid="navigate-redirect" />,
   };
 });
 
@@ -24,19 +25,23 @@ vi.mock("../../components/client/documents/ClientDocumentViewer", () => ({
 }));
 
 vi.mock("../../constants/clientPortalMockData", () => ({
-  clientProjectDocuments: [
-    {
-      id: "doc-1",
-      title: "Brand Questionnaire",
-      description: "Initial discovery questionnaire.",
-      category: "Discovery",
-      fileType: "PDF",
-      uploadedAtLabel: "Mar 20, 2026",
-      uploadedAt: "2026-03-20T10:00:00.000Z",
-      fileSizeLabel: "1.2 MB",
-      embedUrl: "https://example.com/doc-1",
+  clientProjectDetailsById: {
+    "project-1": {
+      documents: [
+        {
+          id: "doc-1",
+          title: "Brand Questionnaire",
+          description: "Initial discovery questionnaire.",
+          category: "Discovery",
+          fileType: "PDF",
+          uploadedAtLabel: "Mar 20, 2026",
+          uploadedAt: "2026-03-20T10:00:00.000Z",
+          fileSizeLabel: "1.2 MB",
+          embedUrl: "https://example.com/doc-1",
+        },
+      ],
     },
-  ],
+  },
 }));
 
 describe("ClientDocumentViewerPage", () => {
@@ -45,7 +50,10 @@ describe("ClientDocumentViewerPage", () => {
   });
 
   it("renders the document viewer when the document exists", () => {
-    mockUseParams.mockReturnValue({ documentId: "doc-1" });
+    mockUseParams.mockReturnValue({
+      projectId: "project-1",
+      documentId: "doc-1",
+    });
 
     render(
       <MemoryRouter>
@@ -63,7 +71,10 @@ describe("ClientDocumentViewerPage", () => {
   });
 
   it("renders not found state when the document does not exist", () => {
-    mockUseParams.mockReturnValue({ documentId: "missing-doc" });
+    mockUseParams.mockReturnValue({
+      projectId: "project-1",
+      documentId: "missing-doc",
+    });
 
     render(
       <MemoryRouter>

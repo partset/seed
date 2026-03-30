@@ -14,6 +14,7 @@ async function getProjectsByCompanyIdService(companyId) {
     nextStep: project.next_step,
     status: project.status,
     clientVisibleSummary: project.client_visible_summary,
+    targetLaunchDate: project.target_launch_date,
   }));
 }
 
