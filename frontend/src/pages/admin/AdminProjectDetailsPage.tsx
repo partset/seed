@@ -9,6 +9,7 @@ import ProjectUpdatesSection from "../../components/admin/project-detail/Project
 import type { Company } from "../../types/company";
 import type { Project } from "../../types/project";
 import { getProjectDetails } from "../../services/api/project/getProjectDetails/api";
+import { modifyProjectDetails } from "../../services/api/project/modifyProjectDetails/api";
 import type { AdminPortalProjectRecord } from "../../types/company";
 
 type LocationState = {
@@ -16,24 +17,49 @@ type LocationState = {
   project?: Project;
 };
 
+function mergeSavedProjectDetails(
+  currentProject: AdminPortalProjectRecord,
+  savedProject: Project,
+): AdminPortalProjectRecord {
+  return {
+    ...currentProject,
+    id: savedProject.id,
+    name: savedProject.name,
+    currentPhase: savedProject.currentPhase,
+    nextStep: savedProject.nextStep,
+    startDate: savedProject.startDate,
+    status: savedProject.status,
+    targetLaunchDate: savedProject.targetLaunchDate,
+    clientVisibleSummary: savedProject.clientVisibleSummary,
+  };
+}
+
 export default function AdminProjectDetailsPage() {
   const { session } = useAdminAuth();
   const accessToken = session?.access_token;
+
   const navigate = useNavigate();
   const location = useLocation();
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
+
   const { companyId, projectId } = useParams();
 
   const locationState = location.state as LocationState | null;
 
   const company = locationState?.company ?? null;
-  const passedProject = locationState?.project ?? null;
 
   const [project, setProject] = useState<AdminPortalProjectRecord | null>(null);
+  const [originalProject, setOriginalProject] =
+    useState<AdminPortalProjectRecord | null>(null);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const [error, setError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const [saveSuccessMessage, setSaveSuccessMessage] = useState("");
 
   useEffect(() => {
-    async function loadProjects() {
+    async function loadProject() {
       if (!accessToken) {
         setError("No active admin session found.");
         setIsLoading(false);
@@ -47,7 +73,7 @@ export default function AdminProjectDetailsPage() {
       }
 
       if (!projectId) {
-        setError("Not a valid project.");
+        setError("No project ID provided in URL.");
         setIsLoading(false);
         return;
       }
@@ -57,35 +83,62 @@ export default function AdminProjectDetailsPage() {
         setError("");
 
         const data = await getProjectDetails(accessToken, projectId);
+
         setProject(data);
+        setOriginalProject(data);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : "Failed to load projects.";
+          err instanceof Error ? err.message : "Failed to load project.";
         setError(message);
       } finally {
         setIsLoading(false);
       }
     }
 
-    loadProjects();
-  }, [accessToken, projectId, passedProject]);
+    loadProject();
+  }, [accessToken, companyId, projectId]);
 
-  if (!company || !project || !projectId) {
-    return (
-      <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
-        <section className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center">
-          <h1
-            className="text-4xl uppercase"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            Project Not Found
-          </h1>
-          <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
-            The requested project could not be found in the mock data.
-          </p>
-        </section>
-      </main>
-    );
+  async function handleSaveProjectDetails() {
+    if (!accessToken) {
+      setSaveError("No active admin session found.");
+      return;
+    }
+
+    if (!projectId || !project || !originalProject) {
+      setSaveError("Project details are not ready to save.");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setSaveError("");
+      setSaveSuccessMessage("");
+
+      const savedProject = await modifyProjectDetails(accessToken, projectId, {
+        name: project.name,
+        currentPhase: project.currentPhase,
+        nextStep: project.nextStep,
+        startDate: project.startDate,
+        status: project.status,
+        targetLaunchDate: project.targetLaunchDate,
+        clientVisibleSummary: project.clientVisibleSummary,
+      });
+
+      const updatedProject = mergeSavedProjectDetails(project, savedProject);
+
+      setProject(updatedProject);
+      setOriginalProject(updatedProject);
+
+      setSaveSuccessMessage("Project details saved successfully.");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to save project details.";
+
+      setSaveError(message);
+      setSaveSuccessMessage("");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   function handleAddUpdate(payload: {
@@ -143,6 +196,43 @@ export default function AdminProjectDetailsPage() {
       };
     });
   }
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
+        <section className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center">
+          <h1
+            className="text-4xl uppercase"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Loading Project
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+            Fetching the latest project details.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (error || !company || !project || !projectId) {
+    return (
+      <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
+        <section className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center">
+          <h1
+            className="text-4xl uppercase"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Project Not Found
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+            {error || "The requested project could not be found."}
+          </p>
+        </section>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
       <section className="mx-auto max-w-7xl">
@@ -154,7 +244,9 @@ export default function AdminProjectDetailsPage() {
           >
             Companies
           </button>
+
           <span className="text-[var(--color-muted)]">/</span>
+
           <button
             type="button"
             onClick={() => navigate(`/admin/${company.id}`)}
@@ -162,7 +254,9 @@ export default function AdminProjectDetailsPage() {
           >
             {company.name}
           </button>
+
           <span className="text-[var(--color-muted)]">/</span>
+
           <span>{project.name}</span>
         </div>
 
@@ -171,7 +265,15 @@ export default function AdminProjectDetailsPage() {
         <div className="mt-8 grid gap-6">
           <ProjectMetaForm
             project={project}
-            onProjectChange={(updatedProject) => setProject(updatedProject)}
+            onProjectChange={(updatedProject) => {
+              setProject(updatedProject);
+              setSaveError("");
+              setSaveSuccessMessage("");
+            }}
+            onSave={handleSaveProjectDetails}
+            isSaving={isSaving}
+            saveError={saveError}
+            saveSuccessMessage={saveSuccessMessage}
           />
 
           <ProjectUpdatesSection
