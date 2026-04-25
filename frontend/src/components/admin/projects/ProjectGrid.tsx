@@ -3,7 +3,7 @@ import ProjectCard from "./ProjectCard";
 
 interface ProjectGridProps {
   projects: Project[];
-  onProjectClick?: (projectId: string) => void;
+  onProjectClick?: (project: Project) => void;
 }
 
 export default function ProjectGrid({

@@ -1,37 +1,74 @@
-import { useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useAdminAuth } from "../../hooks/useAdminAuth";
 import ProjectDocumentsSection from "../../components/admin/project-detail/ProjectDocumentsSection";
 import ProjectHeader from "../../components/admin/project-detail/ProjectHeader";
 import ProjectMetaForm from "../../components/admin/project-detail/ProjectMetaForm";
 import ProjectMilestonesSection from "../../components/admin/project-detail/ProjectMilestonesSection";
 import ProjectUpdatesSection from "../../components/admin/project-detail/ProjectUpdatesSection";
-import {
-  adminPortalMockCompanies,
-  adminPortalMockProjectDetails,
-} from "../../constants/adminPortalMockData";
+import type { Company } from "../../types/company";
+import type { Project } from "../../types/project";
+import { getProjectDetails } from "../../services/api/project/getProjectDetails/api";
 import type { AdminPortalProjectRecord } from "../../types/company";
 
+type LocationState = {
+  company?: Company;
+  project?: Project;
+};
+
 export default function AdminProjectDetailsPage() {
+  const { session } = useAdminAuth();
+  const accessToken = session?.access_token;
   const navigate = useNavigate();
+  const location = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
   const { companyId, projectId } = useParams();
 
-  const company = useMemo(() => {
-    return (
-      adminPortalMockCompanies.find((item) => item.id === companyId) ?? null
-    );
-  }, [companyId]);
+  const locationState = location.state as LocationState | null;
 
-  const initialProject = useMemo(() => {
-    if (!projectId) {
-      return null;
+  const company = locationState?.company ?? null;
+  const passedProject = locationState?.project ?? null;
+
+  const [project, setProject] = useState<AdminPortalProjectRecord | null>(null);
+
+  useEffect(() => {
+    async function loadProjects() {
+      if (!accessToken) {
+        setError("No active admin session found.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!companyId) {
+        setError("No company ID provided in URL.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!projectId) {
+        setError("Not a valid project.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const data = await getProjectDetails(accessToken, projectId);
+        setProject(data);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to load projects.";
+        setError(message);
+      } finally {
+        setIsLoading(false);
+      }
     }
 
-    return adminPortalMockProjectDetails[projectId] ?? null;
-  }, [projectId]);
-
-  const [project, setProject] = useState<AdminPortalProjectRecord | null>(
-    initialProject,
-  );
+    loadProjects();
+  }, [accessToken, projectId, passedProject]);
 
   if (!company || !project || !projectId) {
     return (

@@ -58,9 +58,11 @@ export default function AdminCompanyDetailsPage() {
     loadProjects();
   }, [accessToken, companyId]);
 
-  function handleProjectClick(projectId: string) {
+  function handleProjectClick(project: Project) {
     if (!companyId) return;
-    navigate(`/admin/${companyId}/${projectId}`);
+    navigate(`/admin/${companyId}/${project.id}`, {
+      state: { company, project },
+    });
   }
 
   if (isLoading) {

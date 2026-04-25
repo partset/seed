@@ -3,14 +3,14 @@ import ProjectStatusBadge from "./ProjectStatusBadge";
 
 interface ProjectCardProps {
   project: Project;
-  onClick?: (projectId: string) => void;
+  onClick?: (project: Project) => void;
 }
 
 export default function ProjectCard({ project, onClick }: ProjectCardProps) {
   return (
     <button
       type="button"
-      onClick={() => onClick?.(project.id)}
+      onClick={() => onClick?.(project)}
       className="w-full rounded-3xl border border-white/10 bg-white/5 p-5 text-left transition hover:border-white/20 hover:bg-white/[0.08]"
     >
       <div className="flex flex-wrap items-start justify-between gap-4">

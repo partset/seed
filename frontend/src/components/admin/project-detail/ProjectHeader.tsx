@@ -1,11 +1,8 @@
-import type {
-  AdminPortalCompanyRecord,
-  AdminPortalProjectRecord,
-} from "../../../types/company";
+import type { AdminPortalProjectRecord, Company } from "../../../types/company";
 import ProjectStatusBadge from "../projects/ProjectStatusBadge";
 
 interface ProjectHeaderProps {
-  company: AdminPortalCompanyRecord;
+  company: Company;
   project: AdminPortalProjectRecord;
 }
 
