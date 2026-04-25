@@ -6,8 +6,14 @@ const {
   getProjectDetails,
 } = require("../controllers/project/getProjectDetails");
 const {
+  modifyProjectDetails,
+} = require("../controllers/project/modifyProjectDetails");
+const {
   validateProjectId,
 } = require("../validators/project/validateProjectId");
+const {
+  validateModifyProjectDetails,
+} = require("../validators/project/validateModifyProjectDetails");
 const { requireSupabaseAuth } = require("../middleware/requireSupabaseAuth");
 const { requireAdmin } = require("../middleware/requireAdmin");
 
@@ -28,4 +34,11 @@ router.get(
   getProjectDetails,
 );
 
+router.patch(
+  "/:projectId",
+  requireSupabaseAuth,
+  requireAdmin,
+  validateModifyProjectDetails,
+  modifyProjectDetails,
+);
 module.exports = router;

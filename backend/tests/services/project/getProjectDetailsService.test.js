@@ -18,6 +18,13 @@ describe("getProjectDetailsService", () => {
         {
           project_id: "550e8400-e29b-41d4-a716-446655440000",
           project_name: "Website Redesign",
+          project_current_phase: "Design",
+          project_next_step: "Send homepage mockup",
+          project_start_date: new Date("2026-04-01T00:00:00.000Z"),
+          project_status: "active",
+          project_target_launch_date: new Date("2026-05-01T00:00:00.000Z"),
+          project_client_visible_summary:
+            "Client-safe summary for the redesign project.",
           updates: [
             {
               updateId: "update-1",
@@ -37,6 +44,18 @@ describe("getProjectDetailsService", () => {
               createdAt: "2026-04-24T12:00:00.000Z",
             },
           ],
+          documents: [
+            {
+              documentId: "document-1",
+              title: "Project brief",
+              fileName: "project-brief.pdf",
+              fileType: "pdf",
+              fileSize: 1200,
+              category: "brief",
+              isVisibleToClient: true,
+              createdAt: "2026-04-24T12:00:00.000Z",
+            },
+          ],
         },
       ],
     });
@@ -50,8 +69,14 @@ describe("getProjectDetailsService", () => {
     ]);
 
     expect(result).toEqual({
-      projectId: "550e8400-e29b-41d4-a716-446655440000",
-      projectName: "Website Redesign",
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      name: "Website Redesign",
+      currentPhase: "Design",
+      nextStep: "Send homepage mockup",
+      startDate: "2026-04-01",
+      status: "active",
+      targetLaunchDate: "2026-05-01",
+      clientVisibleSummary: "Client-safe summary for the redesign project.",
       updates: [
         {
           updateId: "update-1",
@@ -68,6 +93,18 @@ describe("getProjectDetailsService", () => {
           displayOrder: 1,
           status: "current",
           completedAt: null,
+          createdAt: "2026-04-24T12:00:00.000Z",
+        },
+      ],
+      documents: [
+        {
+          documentId: "document-1",
+          title: "Project brief",
+          fileName: "project-brief.pdf",
+          fileType: "pdf",
+          fileSize: 1200,
+          category: "brief",
+          isVisibleToClient: true,
           createdAt: "2026-04-24T12:00:00.000Z",
         },
       ],

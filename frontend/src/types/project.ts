@@ -8,8 +8,8 @@ export type ProjectStatus =
 export interface Project {
   id: string;
   name: string;
-  currentPhase: string;
-  nextStep: string;
+  currentPhase: string | null;
+  nextStep: string | null;
   startDate: string | null;
   status: ProjectStatus;
   targetLaunchDate: string | null;
