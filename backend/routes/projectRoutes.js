@@ -9,11 +9,17 @@ const {
   modifyProjectDetails,
 } = require("../controllers/project/modifyProjectDetails");
 const {
+  insertProjectUpdate,
+} = require("../controllers/project/insertProjectUpdate");
+const {
   validateProjectId,
 } = require("../validators/project/validateProjectId");
 const {
   validateModifyProjectDetails,
 } = require("../validators/project/validateModifyProjectDetails");
+const {
+  validateInsertProjectUpdate,
+} = require("../validators/project/validateInsertProjectUpdate");
 const { requireSupabaseAuth } = require("../middleware/requireSupabaseAuth");
 const { requireAdmin } = require("../middleware/requireAdmin");
 
@@ -40,5 +46,13 @@ router.patch(
   requireAdmin,
   validateModifyProjectDetails,
   modifyProjectDetails,
+);
+
+router.post(
+  "/update",
+  requireSupabaseAuth,
+  requireAdmin,
+  validateInsertProjectUpdate,
+  insertProjectUpdate,
 );
 module.exports = router;

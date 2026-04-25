@@ -7,3 +7,11 @@ export interface ProjectUpdate {
   createdAt: string;
   createdByAdminName: string;
 }
+
+export interface InsertProjectUpdatePayload {
+  projectId: string;
+  title: string;
+  description: string;
+  isVisibleToClient: boolean;
+  createdByAdminId: string;
+}
