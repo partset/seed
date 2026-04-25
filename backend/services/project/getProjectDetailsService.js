@@ -24,6 +24,7 @@ async function getProjectDetailsService(projectId) {
     name: row.project_name,
     currentPhase: row.project_current_phase,
     nextStep: row.project_next_step,
+    status: row.project_status,
     startDate: formatDateOnly(row.project_start_date),
     targetLaunchDate: formatDateOnly(row.project_target_launch_date),
     clientVisibleSummary: row.project_client_visible_summary,
