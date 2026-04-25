@@ -10,6 +10,7 @@ import type { Company } from "../../types/company";
 import type { Project } from "../../types/project";
 import { getProjectDetails } from "../../services/api/project/getProjectDetails/api";
 import { modifyProjectDetails } from "../../services/api/project/modifyProjectDetails/api";
+import { insertProjectUpdate } from "../../services/api/project/insertProjectUpdate/api";
 import type { AdminPortalProjectRecord } from "../../types/company";
 
 type LocationState = {
@@ -53,10 +54,13 @@ export default function AdminProjectDetailsPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isAddingUpdate, setIsAddingUpdate] = useState(false);
 
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [saveSuccessMessage, setSaveSuccessMessage] = useState("");
+  const [updateError, setUpdateError] = useState("");
+  const [updateSuccessMessage, setUpdateSuccessMessage] = useState("");
 
   useEffect(() => {
     async function loadProject() {
@@ -141,32 +145,65 @@ export default function AdminProjectDetailsPage() {
     }
   }
 
-  function handleAddUpdate(payload: {
+  async function handleAddUpdate(payload: {
     title: string;
     description: string;
     isVisibleToClient: boolean;
   }) {
-    setProject((previousProject) => {
-      if (!previousProject) {
-        return previousProject;
-      }
+    if (!accessToken) {
+      setUpdateError("No active admin session found.");
+      return;
+    }
 
-      return {
-        ...previousProject,
-        updates: [
-          {
-            id: `update-${Date.now()}`,
-            projectId: previousProject.id,
-            title: payload.title,
-            description: payload.description,
-            isVisibleToClient: payload.isVisibleToClient,
-            createdAt: new Date().toISOString(),
-            createdByAdminName: "Current Admin",
-          },
-          ...previousProject.updates,
-        ],
-      };
-    });
+    if (!projectId || !project) {
+      setUpdateError("Project details are not ready.");
+      return;
+    }
+
+    const createdByAdminId = session?.user?.id;
+
+    if (!createdByAdminId) {
+      setUpdateError("No admin user ID found.");
+      return;
+    }
+
+    try {
+      setIsAddingUpdate(true);
+      setUpdateError("");
+      setUpdateSuccessMessage("");
+
+      const insertedUpdate = await insertProjectUpdate(
+        {
+          projectId,
+          title: payload.title,
+          description: payload.description,
+          isVisibleToClient: payload.isVisibleToClient,
+          createdByAdminId,
+        },
+        accessToken,
+      );
+
+      setProject((previousProject) => {
+        if (!previousProject) {
+          return previousProject;
+        }
+
+        return {
+          ...previousProject,
+          updates: [insertedUpdate, ...previousProject.updates],
+        };
+      });
+
+      setUpdateSuccessMessage("Project update added successfully.");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to add project update.";
+
+      setUpdateError(message);
+      setUpdateSuccessMessage("");
+    } finally {
+      setIsAddingUpdate(false);
+    }
   }
 
   function handleAddMilestone(payload: {
@@ -275,6 +312,18 @@ export default function AdminProjectDetailsPage() {
             saveError={saveError}
             saveSuccessMessage={saveSuccessMessage}
           />
+
+          {updateError && (
+            <p className="rounded-2xl border border-[var(--color-error-border)] bg-[var(--color-error)]/10 px-4 py-3 text-sm text-[var(--color-error)]">
+              {updateError}
+            </p>
+          )}
+
+          {updateSuccessMessage && (
+            <p className="rounded-2xl border border-[var(--color-success)]/40 bg-[var(--color-success)]/10 px-4 py-3 text-sm text-[var(--color-success)]">
+              {updateSuccessMessage}
+            </p>
+          )}
 
           <ProjectUpdatesSection
             updates={project.updates}
