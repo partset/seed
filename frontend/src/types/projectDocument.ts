@@ -12,3 +12,12 @@ export interface ProjectDocument {
   createdAt: string;
   uploadedByAdminName: string;
 }
+
+export interface InsertProjectDocumentPayload {
+  projectId: string;
+  title: string;
+  category: string;
+  description: string;
+  isVisibleToClient: boolean;
+  file: File;
+}
