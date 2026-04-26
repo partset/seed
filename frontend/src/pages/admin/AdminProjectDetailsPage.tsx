@@ -11,6 +11,7 @@ import type { Project } from "../../types/project";
 import { getProjectDetails } from "../../services/api/project/getProjectDetails/api";
 import { modifyProjectDetails } from "../../services/api/project/modifyProjectDetails/api";
 import { insertProjectUpdate } from "../../services/api/project/insertProjectUpdate/api";
+import { insertProjectDocument } from "../../services/api/project/insertProjectDocument/api";
 import type { AdminPortalProjectRecord } from "../../types/company";
 
 type LocationState = {
@@ -55,12 +56,15 @@ export default function AdminProjectDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingUpdate, setIsAddingUpdate] = useState(false);
+  const [isUploadingDocument, setIsUploadingDocument] = useState(false);
 
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [saveSuccessMessage, setSaveSuccessMessage] = useState("");
   const [updateError, setUpdateError] = useState("");
   const [updateSuccessMessage, setUpdateSuccessMessage] = useState("");
+  const [documentError, setDocumentError] = useState("");
+  const [documentSuccessMessage, setDocumentSuccessMessage] = useState("");
 
   useEffect(() => {
     async function loadProject() {
@@ -206,6 +210,63 @@ export default function AdminProjectDetailsPage() {
     }
   }
 
+  async function handleAddDocument(payload: {
+    title: string;
+    category: string;
+    description: string;
+    isVisibleToClient: boolean;
+    file: File;
+  }) {
+    if (!accessToken) {
+      setDocumentError("No active admin session found.");
+      return;
+    }
+
+    if (!projectId || !project) {
+      setDocumentError("Project details are not ready.");
+      return;
+    }
+
+    try {
+      setIsUploadingDocument(true);
+      setDocumentError("");
+      setDocumentSuccessMessage("");
+      console.log("projectId", projectId);
+      const insertedDocument = await insertProjectDocument(
+        {
+          projectId,
+          title: payload.title,
+          category: payload.category,
+          description: payload.description,
+          isVisibleToClient: payload.isVisibleToClient,
+          file: payload.file,
+        },
+        accessToken,
+      );
+
+      setProject((previousProject) => {
+        if (!previousProject) {
+          return previousProject;
+        }
+
+        return {
+          ...previousProject,
+          documents: [insertedDocument, ...previousProject.documents],
+        };
+      });
+
+      setDocumentSuccessMessage("Document uploaded successfully.");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to upload document.";
+
+      setDocumentError(message);
+      setDocumentSuccessMessage("");
+    } finally {
+      setIsUploadingDocument(false);
+    }
+  }
+
   function handleAddMilestone(payload: {
     label: string;
     status: AdminPortalProjectRecord["milestones"][number]["status"];
@@ -330,7 +391,23 @@ export default function AdminProjectDetailsPage() {
             onAddUpdate={handleAddUpdate}
           />
 
-          <ProjectDocumentsSection documents={project.documents} />
+          {documentError && (
+            <p className="rounded-2xl border border-[var(--color-error-border)] bg-[var(--color-error)]/10 px-4 py-3 text-sm text-[var(--color-error)]">
+              {documentError}
+            </p>
+          )}
+
+          {documentSuccessMessage && (
+            <p className="rounded-2xl border border-[var(--color-success)]/40 bg-[var(--color-success)]/10 px-4 py-3 text-sm text-[var(--color-success)]">
+              {documentSuccessMessage}
+            </p>
+          )}
+
+          <ProjectDocumentsSection
+            documents={project.documents}
+            onAddDocument={handleAddDocument}
+            isUploadingDocument={isUploadingDocument}
+          />
 
           <ProjectMilestonesSection
             milestones={project.milestones}
