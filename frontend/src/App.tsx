@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Outlet } from "react-router-dom";
 import { AdminAuthProvider } from "./context/AdminAuthContext";
 import { ClientAuthProvider } from "./context/ClientAuthContext";
 import AdminProtectedRoute from "./components/admin/auth/AdminProtectedRoute";
@@ -20,60 +20,76 @@ import AdminCompaniesPage from "./pages/admin/AdminCompaniesPage";
 import AdminProjectDetailsPage from "./pages/admin/AdminProjectDetailsPage";
 import AdminCompanyDetailsPage from "./pages/admin/AdminCompanyDetailsPage";
 
+function AdminAuthLayout() {
+  return (
+    <AdminAuthProvider>
+      <Outlet />
+    </AdminAuthProvider>
+  );
+}
+
+function ClientAuthLayout() {
+  return (
+    <ClientAuthProvider>
+      <Outlet />
+    </ClientAuthProvider>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
-      <AdminAuthProvider>
-        <ClientAuthProvider>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/play" element={<PlayPage />} />
-            <Route path="/pricing" element={<PricingPage />} />
-            <Route path="/contact" element={<ContactPage />} />
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={<Home />} />
+        <Route path="/play" element={<PlayPage />} />
+        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="/contact" element={<ContactPage />} />
 
-            <Route path="/admin/login" element={<AdminLoginPage />} />
-            <Route element={<AdminProtectedRoute />}>
-              <Route path="/admin/leads" element={<LeadsPage />} />
-              <Route
-                path="/admin/leads/:leadId"
-                element={<LeadDetailsPage />}
-              />
-              <Route path="/admin" element={<AdminCompaniesPage />} />
-              <Route
-                path="/admin/:companyId"
-                element={<AdminCompanyDetailsPage />}
-              />
-              <Route
-                path="/admin/:companyId/:projectId"
-                element={<AdminProjectDetailsPage />}
-              />
-            </Route>
+        {/* Admin routes */}
+        <Route element={<AdminAuthLayout />}>
+          <Route path="/admin/login" element={<AdminLoginPage />} />
 
-            <Route path="/client/login" element={<ClientLoginPage />} />
+          <Route element={<AdminProtectedRoute />}>
+            <Route path="/admin/leads" element={<LeadsPage />} />
+            <Route path="/admin/leads/:leadId" element={<LeadDetailsPage />} />
+            <Route path="/admin" element={<AdminCompaniesPage />} />
+            <Route
+              path="/admin/:companyId"
+              element={<AdminCompanyDetailsPage />}
+            />
+            <Route
+              path="/admin/:companyId/:projectId"
+              element={<AdminProjectDetailsPage />}
+            />
+          </Route>
+        </Route>
 
-            <Route element={<ClientProtectedRoute />}>
-              <Route path="/client" element={<ClientProjectsPage />} />
-              <Route
-                path="/client/:projectId"
-                element={<ClientDashboardPage />}
-              />
+        {/* Client routes */}
+        <Route element={<ClientAuthLayout />}>
+          <Route path="/client/login" element={<ClientLoginPage />} />
 
-              <Route
-                path="/client/:projectId/documents"
-                element={<ClientDocumentsPage />}
-              />
-              <Route
-                path="/client/:projectId/documents/:documentId"
-                element={<ClientDocumentViewerPage />}
-              />
-              <Route
-                path="/client/:projectId/updates"
-                element={<ClientUpdatesPage />}
-              />
-            </Route>
-          </Routes>
-        </ClientAuthProvider>
-      </AdminAuthProvider>
+          <Route element={<ClientProtectedRoute />}>
+            <Route path="/client" element={<ClientProjectsPage />} />
+            <Route
+              path="/client/:projectId"
+              element={<ClientDashboardPage />}
+            />
+            <Route
+              path="/client/:projectId/documents"
+              element={<ClientDocumentsPage />}
+            />
+            <Route
+              path="/client/:projectId/documents/:documentId"
+              element={<ClientDocumentViewerPage />}
+            />
+            <Route
+              path="/client/:projectId/updates"
+              element={<ClientUpdatesPage />}
+            />
+          </Route>
+        </Route>
+      </Routes>
     </BrowserRouter>
   );
 }

@@ -4,6 +4,7 @@ const { errorHandler } = require("./middleware/errorHandler");
 
 const leadRoutes = require("./routes/leadRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const clientRoutes = require("./routes/clientRoutes");
 const utilRoutes = require("./routes/utilRoutes");
 const companyRoutes = require("./routes/companyRoutes");
 const projectRoutes = require("./routes/projectRoutes");
@@ -15,6 +16,7 @@ app.use(express.json());
 
 app.use("/api/lead", leadRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/client", clientRoutes);
 app.use("/api/company", companyRoutes);
 app.use("/api/project", projectRoutes);
 app.use("/api/util", utilRoutes);

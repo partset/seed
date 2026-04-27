@@ -2,7 +2,7 @@ import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useClientAuth } from "../../../hooks/useClientAuth";
 
 export default function ClientProtectedRoute() {
-  const { isAuthenticated, isLoading } = useClientAuth();
+  const { isAuthenticated, isLoading, isClient } = useClientAuth();
   const location = useLocation();
 
   if (isLoading) {
@@ -15,7 +15,7 @@ export default function ClientProtectedRoute() {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !isClient) {
     return <Navigate to="/client/login" replace state={{ from: location }} />;
   }
 

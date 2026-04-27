@@ -13,3 +13,9 @@ export type ClientVerifySetupCodeValues = {
   password: string;
   confirmPassword: string;
 };
+
+export type ClientLoginErrors = {
+  email?: string;
+  password?: string;
+  form?: string;
+};
