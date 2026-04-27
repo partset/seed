@@ -6,6 +6,12 @@ export interface ProjectMilestone {
   label: string;
   displayOrder: number;
   status: ProjectMilestoneStatus;
-  completedAt: string | null;
   createdAt: string;
+}
+
+export interface InsertProjectMilestonePayload {
+  projectId: string;
+  label: string;
+  displayOrder: number;
+  status: ProjectMilestoneStatus;
 }

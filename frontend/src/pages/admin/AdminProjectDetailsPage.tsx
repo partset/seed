@@ -12,7 +12,9 @@ import { getProjectDetails } from "../../services/api/project/getProjectDetails/
 import { modifyProjectDetails } from "../../services/api/project/modifyProjectDetails/api";
 import { insertProjectUpdate } from "../../services/api/project/insertProjectUpdate/api";
 import { insertProjectDocument } from "../../services/api/project/insertProjectDocument/api";
+import { insertProjectMilestone } from "../../services/api/project/insertProjectMilestone/api";
 import type { AdminPortalProjectRecord } from "../../types/company";
+import type { ProjectMilestoneStatus } from "../../types/projectMilestone";
 
 type LocationState = {
   company?: Company;
@@ -57,6 +59,7 @@ export default function AdminProjectDetailsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isAddingUpdate, setIsAddingUpdate] = useState(false);
   const [isUploadingDocument, setIsUploadingDocument] = useState(false);
+  const [isAddingMilestone, setIsAddingMilestone] = useState(false);
 
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState("");
@@ -65,6 +68,8 @@ export default function AdminProjectDetailsPage() {
   const [updateSuccessMessage, setUpdateSuccessMessage] = useState("");
   const [documentError, setDocumentError] = useState("");
   const [documentSuccessMessage, setDocumentSuccessMessage] = useState("");
+  const [milestoneError, setMilestoneError] = useState("");
+  const [milestoneSuccessMessage, setMilestoneSuccessMessage] = useState("");
 
   useEffect(() => {
     async function loadProject() {
@@ -231,7 +236,6 @@ export default function AdminProjectDetailsPage() {
       setIsUploadingDocument(true);
       setDocumentError("");
       setDocumentSuccessMessage("");
-      console.log("projectId", projectId);
       const insertedDocument = await insertProjectDocument(
         {
           projectId,
@@ -267,32 +271,57 @@ export default function AdminProjectDetailsPage() {
     }
   }
 
-  function handleAddMilestone(payload: {
+  async function handleAddMilestone(payload: {
     label: string;
-    status: AdminPortalProjectRecord["milestones"][number]["status"];
+    displayOrder: number;
+    status: ProjectMilestoneStatus;
   }) {
-    setProject((previousProject) => {
-      if (!previousProject) {
-        return previousProject;
-      }
+    if (!accessToken) {
+      setMilestoneError("No active admin session found.");
+      return;
+    }
 
-      return {
-        ...previousProject,
-        milestones: [
-          ...previousProject.milestones,
-          {
-            id: `milestone-${Date.now()}`,
-            projectId: previousProject.id,
-            label: payload.label,
-            displayOrder: previousProject.milestones.length + 1,
-            status: payload.status,
-            completedAt:
-              payload.status === "complete" ? new Date().toISOString() : null,
-            createdAt: new Date().toISOString(),
-          },
-        ],
-      };
-    });
+    if (!projectId || !project) {
+      setMilestoneError("Project details are not ready.");
+      return;
+    }
+
+    try {
+      setIsAddingMilestone(true);
+      setMilestoneError("");
+      setMilestoneSuccessMessage("");
+
+      const insertedMilestone = await insertProjectMilestone(
+        {
+          projectId,
+          label: payload.label,
+          displayOrder: payload.displayOrder,
+          status: payload.status,
+        },
+        accessToken,
+      );
+
+      setProject((previousProject) => {
+        if (!previousProject) {
+          return previousProject;
+        }
+
+        return {
+          ...previousProject,
+          milestones: [insertedMilestone, ...previousProject.milestones],
+        };
+      });
+
+      setMilestoneSuccessMessage("Project milestone added successfully.");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to add project milestone.";
+
+      setMilestoneError(message);
+      setMilestoneSuccessMessage("");
+    } finally {
+      setIsAddingMilestone(false);
+    }
   }
 
   if (isLoading) {

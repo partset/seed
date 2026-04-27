@@ -5,8 +5,9 @@ interface AddMilestoneFormProps {
   nextDisplayOrder: number;
   onSubmit: (payload: {
     label: string;
+    displayOrder: number;
     status: ProjectMilestoneStatus;
-  }) => void;
+  }) => void | Promise<void>;
 }
 
 const milestoneStatusOptions: ProjectMilestoneStatus[] = [
@@ -31,6 +32,7 @@ export default function AddMilestoneForm({
 
     onSubmit({
       label: label.trim(),
+      displayOrder: nextDisplayOrder,
       status,
     });
     setLabel("");

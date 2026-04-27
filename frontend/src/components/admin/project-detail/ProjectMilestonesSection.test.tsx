@@ -11,7 +11,6 @@ const milestones: ProjectMilestone[] = [
     label: "Launch",
     displayOrder: 2,
     status: "upcoming",
-    completedAt: null,
     createdAt: "2026-03-21T00:00:00.000Z",
   },
   {
@@ -20,7 +19,6 @@ const milestones: ProjectMilestone[] = [
     label: "Design approved",
     displayOrder: 1,
     status: "complete",
-    completedAt: "2026-03-20T00:00:00.000Z",
     createdAt: "2026-03-20T00:00:00.000Z",
   },
 ];
