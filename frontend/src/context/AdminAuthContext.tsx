@@ -45,8 +45,6 @@ export function AdminAuthProvider({ children }: AdminAuthProviderProps) {
         data: { session: currentSession },
       } = await supabase.auth.getSession();
 
-      console.log("data: ", currentSession);
-
       if (!isMounted) {
         return;
       }

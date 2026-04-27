@@ -1,14 +1,16 @@
 import { useState } from "react";
-import type { ProjectMilestone } from "../../../types/projectMilestone";
+import type {
+  ProjectMilestone,
+  InsertProjectMilestonePayload,
+} from "../../../types/projectMilestone";
 import AddMilestoneForm from "./AddMilestoneForm";
 import ProjectSectionCard from "./ProjectSectionCard";
 
 interface ProjectMilestonesSectionProps {
   milestones: ProjectMilestone[];
-  onAddMilestone: (payload: {
-    label: string;
-    status: ProjectMilestone["status"];
-  }) => void;
+  onAddMilestone: (
+    payload: Omit<InsertProjectMilestonePayload, "projectId">,
+  ) => Promise<void>;
 }
 
 const milestoneStatusClassMap: Record<ProjectMilestone["status"], string> = {
@@ -46,8 +48,8 @@ export default function ProjectMilestonesSection({
         {isAdding ? (
           <AddMilestoneForm
             nextDisplayOrder={milestones.length + 1}
-            onSubmit={(payload) => {
-              onAddMilestone(payload);
+            onSubmit={async (payload) => {
+              await onAddMilestone(payload);
               setIsAdding(false);
             }}
           />

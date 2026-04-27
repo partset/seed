@@ -18,6 +18,9 @@ const {
   getProjectDocumentDownloadUrl,
 } = require("../controllers/project/getProjectDocumentDownloadUrl");
 const {
+  insertProjectMilestone,
+} = require("../controllers/project/insertProjectMilestone");
+const {
   validateProjectId,
 } = require("../validators/project/validateProjectId");
 const {
@@ -32,6 +35,9 @@ const {
 const {
   validateProjectDocumentDownloadUrl,
 } = require("../validators/project/validateProjectDocumentDownloadUrl");
+const {
+  validateInsertProjectMilestone,
+} = require("../validators/project/validateInsertProjectMilestone");
 const { requireSupabaseAuth } = require("../middleware/requireSupabaseAuth");
 const { requireAdmin } = require("../middleware/requireAdmin");
 const uploadProjectDocument = require("../middleware/uploadProjectDocument");
@@ -84,5 +90,13 @@ router.post(
   uploadProjectDocument.single("file"),
   validateInsertProjectDocument,
   insertProjectDocument,
+);
+
+router.post(
+  "/milestone",
+  requireSupabaseAuth,
+  requireAdmin,
+  validateInsertProjectMilestone,
+  insertProjectMilestone,
 );
 module.exports = router;

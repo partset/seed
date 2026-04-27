@@ -19,7 +19,6 @@ export async function getProjectDetails(
   );
 
   const result: ApiResponse<AdminPortalProjectRecord> = await response.json();
-  console.log("API response for getProjectDetails:", result);
 
   if (!response.ok || !result.success) {
     throw new Error(result.error || "Failed to fetch project by company ID");

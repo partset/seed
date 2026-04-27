@@ -16,7 +16,6 @@ export async function getProjectByCompanyId(
   });
 
   const result: ApiResponse<Project[]> = await response.json();
-  console.log("API response for getProjectByCompanyId:", result);
 
   if (!response.ok || !result.success) {
     throw new Error(result.error || "Failed to fetch project by company ID");

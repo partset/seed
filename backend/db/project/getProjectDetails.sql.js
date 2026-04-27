@@ -38,7 +38,6 @@ module.exports = {
           'label', PM.label,
           'displayOrder', PM.display_order,
           'status', PM.status,
-          'completedAt', PM.completed_at,
           'createdAt', PM.created_at
         )
         ORDER BY PM.display_order ASC

@@ -13,7 +13,6 @@ export async function getAllCompanies(token: string): Promise<Company[]> {
   });
 
   const result: ApiResponse<Company[]> = await response.json();
-  console.log("API response for getAllCompanies:", result);
 
   if (!response.ok || !result.success) {
     throw new Error(result.error || "Failed to fetch companies");

@@ -13,7 +13,6 @@ export async function getAllLeads(token: string): Promise<Lead[]> {
   });
 
   const result: ApiResponse<Lead[]> = await response.json();
-  console.log("API response for getAllLeads:", result);
 
   if (!response.ok || !result.success) {
     throw new Error(result.error || "Failed to fetch leads");

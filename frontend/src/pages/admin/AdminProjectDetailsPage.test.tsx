@@ -88,7 +88,6 @@ vi.mock("../../constants/adminPortalMockData", () => ({
           label: "Discovery complete",
           displayOrder: 1,
           status: "complete",
-          completedAt: "2026-03-15T00:00:00.000Z",
           createdAt: "2026-03-10T00:00:00.000Z",
         },
       ],
