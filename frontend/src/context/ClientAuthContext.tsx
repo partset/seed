@@ -19,6 +19,7 @@ type ClientAuthContextValue = {
   user: User | null;
   session: Session | null;
   isClient: boolean;
+  companyId: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (values: ClientLoginFormValues) => Promise<void>;
@@ -42,6 +43,7 @@ export function ClientAuthProvider({ children }: ClientAuthProviderProps) {
   const [session, setSession] = useState<Session | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [companyId, setCompanyId] = useState<string | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -62,6 +64,7 @@ export function ClientAuthProvider({ children }: ClientAuthProviderProps) {
         setUser(null);
         setIsClient(false);
         setIsLoading(false);
+        setCompanyId(null);
         return;
       }
 
@@ -79,12 +82,14 @@ export function ClientAuthProvider({ children }: ClientAuthProviderProps) {
           setUser(null);
           setIsClient(false);
           setIsLoading(false);
+          setCompanyId(null);
           return;
         }
 
         setSession(currentSession);
         setUser(currentSession.user);
         setIsClient(true);
+        setCompanyId(clientResponse.data.companyId);
       } catch {
         await supabase.auth.signOut();
 
@@ -133,7 +138,7 @@ export function ClientAuthProvider({ children }: ClientAuthProviderProps) {
     setIsLoading(true);
 
     try {
-      await loginClient(values);
+      const result = await loginClient(values);
 
       const {
         data: { session: freshSession },
@@ -142,6 +147,7 @@ export function ClientAuthProvider({ children }: ClientAuthProviderProps) {
       setSession(freshSession);
       setUser(freshSession?.user ?? null);
       setIsClient(true);
+      setCompanyId(result.companyId);
     } finally {
       setIsLoading(false);
     }
@@ -232,6 +238,7 @@ export function ClientAuthProvider({ children }: ClientAuthProviderProps) {
       user,
       session,
       isClient,
+      companyId,
       isAuthenticated: Boolean(session && user && isClient),
       isLoading,
       login: handleLogin,

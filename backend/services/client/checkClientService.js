@@ -4,9 +4,12 @@ const checkClientQuery = require("../../db/client/auth/checkClient.sql");
 async function checkClientService(authUserId) {
   const result = await db.query(checkClientQuery.checkClient, [authUserId]);
 
+  const row = result.rows[0];
+
   return {
     authUserId,
-    isClient: result.rows[0]?.is_client ?? false,
+    isClient: row?.is_client ?? false,
+    companyId: row?.company_id ?? null,
   };
 }
 

@@ -13,9 +13,9 @@ describe("checkClientService", () => {
     jest.clearAllMocks();
   });
 
-  it("returns isClient true when the user exists as an active client", async () => {
+  it("returns isClient true and companyId when the user exists as an active client", async () => {
     db.query.mockResolvedValue({
-      rows: [{ is_client: true }],
+      rows: [{ is_client: true, company_id: "company-123" }],
     });
 
     const result = await checkClientService("auth-user-123");
@@ -27,10 +27,11 @@ describe("checkClientService", () => {
     expect(result).toEqual({
       authUserId: "auth-user-123",
       isClient: true,
+      companyId: "company-123",
     });
   });
 
-  it("returns isClient false when the user is not an active client", async () => {
+  it("returns isClient false and companyId null when the user is not an active client", async () => {
     db.query.mockResolvedValue({
       rows: [{ is_client: false }],
     });
@@ -44,10 +45,11 @@ describe("checkClientService", () => {
     expect(result).toEqual({
       authUserId: "auth-user-123",
       isClient: false,
+      companyId: null,
     });
   });
 
-  it("defaults isClient to false if no row is returned", async () => {
+  it("defaults isClient to false and companyId to null if no row is returned", async () => {
     db.query.mockResolvedValue({
       rows: [],
     });
@@ -57,6 +59,7 @@ describe("checkClientService", () => {
     expect(result).toEqual({
       authUserId: "auth-user-123",
       isClient: false,
+      companyId: null,
     });
   });
 

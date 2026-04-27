@@ -1,10 +1,11 @@
 module.exports = {
   checkClient: `
-    SELECT EXISTS (
-        SELECT 1
-        FROM client_users
-        WHERE auth_user_id = $1
-            AND is_active = true
-    ) AS is_client;
+    SELECT 
+      true AS is_client,
+      company_id
+    FROM client_users
+    WHERE auth_user_id = $1
+      AND is_active = true
+    LIMIT 1;
   `,
 };

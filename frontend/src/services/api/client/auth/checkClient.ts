@@ -6,6 +6,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 type CheckClientResponse = ApiResponse<{
   authUserId: string;
   isClient: boolean;
+  companyId: string | null;
 }>;
 
 export const checkClient = async (): Promise<CheckClientResponse> => {
@@ -31,5 +32,6 @@ export const checkClient = async (): Promise<CheckClientResponse> => {
     throw new Error(data.error || "Failed to verify client.");
   }
 
+  console.log("data: ", data);
   return data;
 };

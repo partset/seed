@@ -6,6 +6,7 @@ export type LoginClientResult = {
   userId: string;
   accessToken: string;
   isClient: boolean;
+  companyId: string;
 };
 
 export async function loginClient(
@@ -27,10 +28,15 @@ export async function loginClient(
       throw new Error("You do not have access to the client portal.");
     }
 
+    if (!clientCheck.data.companyId) {
+      throw new Error("You do not have a company in the client portal");
+    }
+
     return {
       userId: data.user.id,
       accessToken: data.session.access_token,
       isClient: true,
+      companyId: clientCheck.data.companyId,
     };
   } catch (error) {
     await supabase.auth.signOut();

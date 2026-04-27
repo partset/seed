@@ -7,6 +7,7 @@ export async function getProjectByCompanyId(
   token: string,
   companyId: string,
 ): Promise<Project[]> {
+  console.log("link: ", `${API_BASE_URL}/api/project/${companyId}`);
   const response = await fetch(`${API_BASE_URL}/api/project/${companyId}`, {
     method: "GET",
     headers: {
