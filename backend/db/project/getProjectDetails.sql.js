@@ -23,11 +23,15 @@ module.exports = {
           'title', PU.title,
           'description', PU.description,
           'isVisibleToClient', PU.is_visible_to_client,
-          'createdAt', PU.created_at
+          'createdAt', PU.created_at,
+          'createdByAdminId', PU.created_by_admin_id,
+          'createdByAdminEmail', AU.email
         )
         ORDER BY PU.created_at DESC
       ) AS updates
       FROM project_updates PU
+      LEFT JOIN admin_users AU
+        ON AU.id = PU.created_by_admin_id
       WHERE PU.project_id = P.id
     ) U ON true
 

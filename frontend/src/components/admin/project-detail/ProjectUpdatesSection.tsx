@@ -64,7 +64,7 @@ export default function ProjectUpdatesSection({
                   </h3>
                   <p className="mt-1 text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">
                     {new Date(update.createdAt).toLocaleDateString()} •{" "}
-                    {update.createdByAdminName}
+                    {update.createdByAdminEmail}
                   </p>
                 </div>
                 <span className="rounded-full border border-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] text-[var(--color-muted)]">

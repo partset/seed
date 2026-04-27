@@ -29,6 +29,7 @@ export default function AdminCompaniesPage() {
         setError("");
 
         const data = await getAllCompanies(accessToken);
+        console.log("data: ", data);
         setCompanies(data);
       } catch (err) {
         const message =

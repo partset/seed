@@ -4,10 +4,15 @@ const getProjectDetailsQuery = require("../../db/project/getProjectDetails.sql")
 function formatDateOnly(value) {
   if (!value) return null;
 
-  // If pg returns a JS Date object
   if (value instanceof Date) {
     return value.toISOString().split("T")[0];
   }
+
+  if (typeof value === "string") {
+    return value.split("T")[0];
+  }
+
+  return null;
 }
 
 async function getProjectDetailsService(projectId) {

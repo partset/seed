@@ -376,7 +376,9 @@ export default function AdminProjectDetailsPage() {
 
           <button
             type="button"
-            onClick={() => navigate(`/admin/${company.id}`)}
+            onClick={() =>
+              navigate(`/admin/${company.id}`, { state: { company } })
+            }
             className="transition hover:opacity-80"
           >
             {company.name}

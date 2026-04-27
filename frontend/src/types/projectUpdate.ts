@@ -5,7 +5,7 @@ export interface ProjectUpdate {
   description: string;
   isVisibleToClient: boolean;
   createdAt: string;
-  createdByAdminName: string;
+  createdByAdminEmail: string;
 }
 
 export interface InsertProjectUpdatePayload {
