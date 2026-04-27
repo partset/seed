@@ -7,6 +7,8 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "../lib/supabase";
+import { checkClient } from "../services/api/client/auth/checkClient";
+import { loginClient } from "../services/api/client/auth/loginClient";
 import type {
   ClientLoginFormValues,
   ClientSetupCodeRequestValues,
@@ -16,6 +18,7 @@ import type {
 type ClientAuthContextValue = {
   user: User | null;
   session: Session | null;
+  isClient: boolean;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (values: ClientLoginFormValues) => Promise<void>;
@@ -37,6 +40,7 @@ type ClientAuthProviderProps = {
 export function ClientAuthProvider({ children }: ClientAuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [isClient, setIsClient] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -53,23 +57,70 @@ export function ClientAuthProvider({ children }: ClientAuthProviderProps) {
         return;
       }
 
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      setIsLoading(false);
+      if (!currentSession?.user) {
+        setSession(null);
+        setUser(null);
+        setIsClient(false);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const clientResponse = await checkClient();
+
+        if (!isMounted) {
+          return;
+        }
+
+        if (!clientResponse.data.isClient) {
+          await supabase.auth.signOut();
+
+          setSession(null);
+          setUser(null);
+          setIsClient(false);
+          setIsLoading(false);
+          return;
+        }
+
+        setSession(currentSession);
+        setUser(currentSession.user);
+        setIsClient(true);
+      } catch {
+        await supabase.auth.signOut();
+
+        if (!isMounted) {
+          return;
+        }
+
+        setSession(null);
+        setUser(null);
+        setIsClient(false);
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
     }
 
     initializeClientAuth();
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, newSession) => {
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
       if (!isMounted) {
         return;
       }
 
+      if (!newSession?.user) {
+        setSession(null);
+        setUser(null);
+        setIsClient(false);
+        setIsLoading(false);
+        return;
+      }
+
       setSession(newSession);
-      setUser(newSession?.user ?? null);
-      setIsLoading(false);
+      setUser(newSession.user);
     });
 
     return () => {
@@ -79,27 +130,34 @@ export function ClientAuthProvider({ children }: ClientAuthProviderProps) {
   }, []);
 
   async function handleLogin(values: ClientLoginFormValues) {
-    const normalizedEmail = values.email.trim().toLowerCase();
+    setIsLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: normalizedEmail,
-      password: values.password,
-    });
+    try {
+      await loginClient(values);
 
-    if (error) {
-      throw new Error(error.message || "Unable to sign in.");
+      const {
+        data: { session: freshSession },
+      } = await supabase.auth.getSession();
+
+      setSession(freshSession);
+      setUser(freshSession?.user ?? null);
+      setIsClient(true);
+    } finally {
+      setIsLoading(false);
     }
   }
 
   async function handleLogout() {
-    const { error } = await supabase.auth.signOut();
+    setIsLoading(true);
 
-    if (error) {
-      throw new Error(error.message || "Unable to sign out.");
+    try {
+      await supabase.auth.signOut();
+      setSession(null);
+      setUser(null);
+      setIsClient(false);
+    } finally {
+      setIsLoading(false);
     }
-
-    setSession(null);
-    setUser(null);
   }
 
   async function handleSendSetupCode(values: ClientSetupCodeRequestValues) {
@@ -152,20 +210,36 @@ export function ClientAuthProvider({ children }: ClientAuthProviderProps) {
     if (passwordError) {
       throw new Error(passwordError.message || "Unable to set password.");
     }
+
+    const clientResponse = await checkClient();
+
+    if (!clientResponse.data.isClient) {
+      await supabase.auth.signOut();
+      throw new Error("You do not have access to the client portal.");
+    }
+
+    const {
+      data: { session: freshSession },
+    } = await supabase.auth.getSession();
+
+    setSession(freshSession);
+    setUser(freshSession?.user ?? null);
+    setIsClient(true);
   }
 
   const value = useMemo<ClientAuthContextValue>(
     () => ({
       user,
       session,
-      isAuthenticated: Boolean(session && user),
+      isClient,
+      isAuthenticated: Boolean(session && user && isClient),
       isLoading,
       login: handleLogin,
       logout: handleLogout,
       sendSetupCode: handleSendSetupCode,
       verifySetupCodeAndSetPassword: handleVerifySetupCodeAndSetPassword,
     }),
-    [user, session, isLoading],
+    [user, session, isClient, isLoading],
   );
 
   return (

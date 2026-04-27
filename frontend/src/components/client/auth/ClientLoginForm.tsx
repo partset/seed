@@ -24,10 +24,14 @@ export default function ClientLoginForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    const normalizedEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     const nextErrors: ClientLoginErrors = {};
 
-    if (!email.trim()) {
+    if (!normalizedEmail) {
       nextErrors.email = "Email is required.";
+    } else if (!emailRegex.test(normalizedEmail)) {
+      nextErrors.email = "Valid email is required.";
     }
 
     if (!password.trim()) {
@@ -44,11 +48,11 @@ export default function ClientLoginForm() {
       setErrors(INITIAL_ERRORS);
 
       await login({
-        email,
+        email: normalizedEmail,
         password,
       });
 
-      navigate("/client/", { replace: true });
+      navigate("/client", { replace: true });
     } catch (error) {
       const message =
         error instanceof Error
