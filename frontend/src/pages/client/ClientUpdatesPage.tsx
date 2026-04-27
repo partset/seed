@@ -1,27 +1,29 @@
 import { useMemo } from "react";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import ClientUpdatesTable from "../../components/client/updates/ClientUpdatesTable";
-import { clientProjectDetailsById } from "../../constants/clientPortalMockData";
+import type { ProjectUpdate } from "../../types/projectUpdate";
+
+interface ClientUpdatesPageState {
+  updates?: ProjectUpdate[];
+}
 
 export default function ClientUpdatesPage() {
   const { projectId } = useParams<{ projectId: string }>();
+  const location = useLocation();
+
+  const state = location.state as ClientUpdatesPageState | null;
+  const updates = state?.updates ?? [];
+
+  const sortedUpdates = useMemo(() => {
+    return [...updates].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [updates]);
 
   if (!projectId) {
     return <Navigate to="/client" replace />;
   }
-
-  const project = clientProjectDetailsById[projectId];
-
-  if (!project) {
-    return <Navigate to="/client" replace />;
-  }
-
-  const sortedUpdates = useMemo(() => {
-    return [...project.updates].sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    );
-  }, [project.updates]);
 
   return (
     <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
@@ -57,7 +59,15 @@ export default function ClientUpdatesPage() {
           </div>
         </div>
 
-        <ClientUpdatesTable updates={sortedUpdates} />
+        {sortedUpdates.length > 0 ? (
+          <ClientUpdatesTable updates={sortedUpdates} />
+        ) : (
+          <section className="rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center">
+            <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-muted)]">
+              No updates found for this project.
+            </p>
+          </section>
+        )}
       </section>
     </main>
   );

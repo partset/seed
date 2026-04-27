@@ -1,28 +1,35 @@
 import { useMemo } from "react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import ClientDocumentsTable from "../../components/client/documents/ClientDocumentsTable";
-import { clientProjectDetailsById } from "../../constants/clientPortalMockData";
+import type { ProjectDocument } from "../../types/projectDocument";
+
+interface ClientDocumentsPageState {
+  documents?: ProjectDocument[];
+}
 
 export default function ClientDocumentsPage() {
   const navigate = useNavigate();
   const { projectId } = useParams<{ projectId: string }>();
+  const location = useLocation();
+
+  const state = location.state as ClientDocumentsPageState | null;
+  const documents = state?.documents ?? [];
+
+  const sortedDocuments = useMemo(() => {
+    return [...documents].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  }, [documents]);
 
   if (!projectId) {
     return <Navigate to="/client" replace />;
   }
-
-  const project = clientProjectDetailsById[projectId];
-
-  if (!project) {
-    return <Navigate to="/client" replace />;
-  }
-
-  const sortedDocuments = useMemo(() => {
-    return [...project.documents].sort(
-      (a, b) =>
-        new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
-    );
-  }, [project.documents]);
 
   return (
     <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
@@ -58,12 +65,25 @@ export default function ClientDocumentsPage() {
           </div>
         </div>
 
-        <ClientDocumentsTable
-          documents={sortedDocuments}
-          onDocumentClick={(document) =>
-            navigate(`/client/${projectId}/documents/${document.id}`)
-          }
-        />
+        {sortedDocuments.length > 0 ? (
+          <ClientDocumentsTable
+            documents={sortedDocuments}
+            onDocumentClick={(document) =>
+              navigate(`/client/${projectId}/documents/${document.id}`, {
+                state: {
+                  document,
+                  documents: sortedDocuments,
+                },
+              })
+            }
+          />
+        ) : (
+          <section className="rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center">
+            <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-muted)]">
+              No documents found for this project.
+            </p>
+          </section>
+        )}
       </section>
     </main>
   );

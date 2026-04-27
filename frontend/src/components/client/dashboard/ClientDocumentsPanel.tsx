@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import type { ClientProjectDocument } from "../../../types/clientPortal";
+import type { ProjectDocument } from "../../../types/projectDocument";
+import { formatDate } from "../../../utils/formatDate";
 
 interface ClientDocumentsPanelProps {
-  documents: ClientProjectDocument[];
+  documents: ProjectDocument[];
 }
 
 export default function ClientDocumentsPanel({
@@ -16,17 +17,36 @@ export default function ClientDocumentsPanel({
     return [...documents]
       .sort(
         (a, b) =>
-          new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
       )
       .slice(0, 3);
   }, [documents]);
 
   function handleViewAllClick() {
-    navigate(`/client/${projectId}/documents`);
+    if (!projectId) return;
+
+    navigate(`/client/${projectId}/documents`, {
+      state: {
+        documents,
+      },
+    });
   }
 
   function handleDocumentClick(documentId: string) {
-    navigate(`/client/${projectId}/documents/${documentId}`);
+    if (!projectId) return;
+
+    const selectedDocument = documents.find(
+      (document) => document.id === documentId,
+    );
+
+    if (!selectedDocument) return;
+
+    navigate(`/client/${projectId}/documents/${documentId}`, {
+      state: {
+        document: selectedDocument,
+        documents,
+      },
+    });
   }
 
   return (
@@ -80,19 +100,19 @@ export default function ClientDocumentsPanel({
                       {document.title}
                     </div>
                     <div className="mt-1 text-sm text-[var(--color-muted)]">
-                      {document.category}
+                      {document.category || "Uncategorized"}
                     </div>
                   </td>
 
                   <td className="px-4 py-5 align-top">
                     <span className="text-sm text-[var(--color-foreground)]">
-                      {document.uploadedAtLabel}
+                      {formatDate(document.createdAt)}
                     </span>
                   </td>
 
                   <td className="px-4 py-5 align-top">
                     <span className="text-sm text-[var(--color-foreground)]">
-                      {document.fileType}
+                      {document.fileType || "File"}
                     </span>
                   </td>
 

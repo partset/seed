@@ -12,7 +12,14 @@ module.exports = {
 
       COALESCE(U.updates, '[]'::json) AS updates,
       COALESCE(M.milestones, '[]'::json) AS milestones,
-      COALESCE(D.documents, '[]'::json) AS documents
+      COALESCE(D.documents, '[]'::json) AS documents,
+
+      B.invoice_id AS billing_invoice_id,
+      B.invoice_number AS billing_invoice_number,
+      B.amount_cents AS billing_amount_cents,
+      B.currency AS billing_currency,
+      B.due_date AS billing_due_date,
+      B.status AS billing_status
 
     FROM projects P
 
@@ -69,6 +76,28 @@ module.exports = {
       FROM project_documents PD
       WHERE PD.project_id = P.id
     ) D ON true
+
+    LEFT JOIN LATERAL (
+      SELECT
+        I.id AS invoice_id,
+        I.invoice_number,
+        I.amount_cents,
+        I.currency,
+        I.due_date,
+        I.status
+      FROM invoices I
+      WHERE I.project_id = P.id
+        AND I.status != 'void'
+      ORDER BY 
+        CASE 
+          WHEN I.status IN ('unpaid', 'overdue') THEN 1
+          WHEN I.status = 'paid' THEN 2
+          ELSE 3
+        END,
+        I.due_date ASC NULLS LAST,
+        I.created_at DESC
+      LIMIT 1
+    ) B ON true
 
     WHERE P.id = $1;
   `,

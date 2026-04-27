@@ -1,6 +1,14 @@
-import { Link, Navigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Navigate, useLocation, useParams } from "react-router-dom";
+import { useClientAuth } from "../../hooks/useClientAuth";
 import ClientDocumentViewer from "../../components/client/documents/ClientDocumentViewer";
-import { clientProjectDetailsById } from "../../constants/clientPortalMockData";
+import { getProjectDocumentSignedUrl } from "../../services/api/project/getProjectDocumentSignedUrl/api";
+import type { ProjectDocument } from "../../types/projectDocument";
+
+interface ClientDocumentViewerPageState {
+  document?: ProjectDocument;
+  documents?: ProjectDocument[];
+}
 
 export default function ClientDocumentViewerPage() {
   const { projectId, documentId } = useParams<{
@@ -8,47 +16,103 @@ export default function ClientDocumentViewerPage() {
     documentId: string;
   }>();
 
+  const { session } = useClientAuth();
+  const location = useLocation();
+
+  const [signedUrl, setSignedUrl] = useState("");
+  const [error, setError] = useState("");
+  const [isLoadingUrl, setIsLoadingUrl] = useState(true);
+
+  const state = location.state as ClientDocumentViewerPageState | null;
+
+  const documentFromState = state?.document;
+  const documentsFromState = state?.documents ?? [];
+
+  const document =
+    documentFromState ??
+    documentsFromState.find((item) => item.id === documentId) ??
+    null;
+
+  const accessToken = session?.access_token;
+
+  useEffect(() => {
+    async function loadSignedUrl() {
+      if (!accessToken || !projectId || !documentId) {
+        setIsLoadingUrl(false);
+        return;
+      }
+
+      try {
+        setIsLoadingUrl(true);
+        setError("");
+
+        const response = await getProjectDocumentSignedUrl(
+          accessToken,
+          projectId,
+          documentId,
+        );
+
+        setSignedUrl(response.url);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to load document URL.";
+        setError(message);
+      } finally {
+        setIsLoadingUrl(false);
+      }
+    }
+
+    loadSignedUrl();
+  }, [accessToken, projectId, documentId]);
+
   if (!projectId) {
     return <Navigate to="/client" replace />;
   }
 
-  const project = clientProjectDetailsById[projectId];
-
-  if (!project) {
-    return <Navigate to="/client" replace />;
+  if (!documentId) {
+    return <Navigate to={`/client/${projectId}/documents`} replace />;
   }
-
-  const document = project.documents.find((item) => item.id === documentId);
 
   if (!document) {
     return (
       <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
-        <section className="mx-auto max-w-5xl space-y-6">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 md:p-8">
-            <p className="text-[11px] uppercase tracking-[0.24em] text-[var(--color-primary)]">
-              Documents
-            </p>
+        <section className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center">
+          <h1
+            className="text-4xl uppercase"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Document Not Found
+          </h1>
 
-            <h1
-              className="mt-3 text-4xl uppercase md:text-6xl"
-              style={{ fontFamily: "var(--font-display)" }}
-            >
-              Document Not Found
-            </h1>
+          <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+            This document was not passed to the viewer. Please return to the
+            documents page and open it again.
+          </p>
+        </section>
+      </main>
+    );
+  }
 
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--color-muted)]">
-              The document you tried to open could not be found.
-            </p>
+  if (isLoadingUrl) {
+    return (
+      <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
+        <section className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center">
+          <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-muted)]">
+            Loading document preview...
+          </p>
+        </section>
+      </main>
+    );
+  }
 
-            <div className="mt-6">
-              <Link
-                to={`/client/${projectId}/documents`}
-                className="inline-flex rounded-full border border-white/10 bg-[var(--color-primary)] px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-black transition hover:opacity-90"
-              >
-                Back to Documents
-              </Link>
-            </div>
-          </div>
+  if (error) {
+    return (
+      <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
+        <section className="mx-auto max-w-7xl rounded-3xl border border-red-400/20 bg-red-400/10 px-6 py-12 text-center">
+          <p className="text-sm uppercase tracking-[0.2em] text-red-200">
+            Failed to load document preview
+          </p>
+          <p className="mt-3 text-sm leading-7 text-red-100">{error}</p>
         </section>
       </main>
     );
@@ -56,17 +120,8 @@ export default function ClientDocumentViewerPage() {
 
   return (
     <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
-      <section className="mx-auto max-w-7xl space-y-6">
-        <div>
-          <Link
-            to={`/client/${projectId}/documents`}
-            className="inline-flex rounded-full border border-white/10 px-4 py-2 text-xs uppercase tracking-[0.14em] text-[var(--color-foreground)] transition hover:bg-white/5"
-          >
-            Back to Documents
-          </Link>
-        </div>
-
-        <ClientDocumentViewer document={document} />
+      <section className="mx-auto max-w-7xl">
+        <ClientDocumentViewer document={document} viewerUrl={signedUrl} />
       </section>
     </main>
   );
