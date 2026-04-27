@@ -50,7 +50,7 @@ const router = express.Router();
 router.get(
   "/:projectId/documents/:documentId/download-url",
   requireSupabaseAuth,
-  requireAdmin,
+  requireAdminOrClientCompanyAccess,
   validateProjectDocumentDownloadUrl,
   getProjectDocumentDownloadUrl,
 );
@@ -58,7 +58,7 @@ router.get(
 router.get(
   "/:projectId/details",
   requireSupabaseAuth,
-  requireAdmin,
+  requireAdminOrClientCompanyAccess,
   validateProjectId,
   getProjectDetails,
 );

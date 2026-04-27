@@ -1,8 +1,10 @@
-import type { ClientProjectDocument } from "../../../types/clientPortal";
+import type { ProjectDocument } from "../../../types/projectDocument";
+import { formatDate } from "../../../utils/formatDate";
+import { formatFileSize } from "../../../utils/formatFileSize";
 
 interface ClientDocumentsTableProps {
-  documents: ClientProjectDocument[];
-  onDocumentClick?: (document: ClientProjectDocument) => void;
+  documents: ProjectDocument[];
+  onDocumentClick?: (document: ProjectDocument) => void;
 }
 
 export default function ClientDocumentsTable({
@@ -47,32 +49,33 @@ export default function ClientDocumentsTable({
                   <div className="font-medium text-[var(--color-foreground)]">
                     {document.title}
                   </div>
+
                   <div className="mt-1 max-w-md text-sm text-[var(--color-muted)]">
-                    {document.description}
+                    {document.description || "No description provided."}
                   </div>
                 </td>
 
                 <td className="px-4 py-5 align-top">
                   <span className="text-sm text-[var(--color-foreground)]">
-                    {document.category}
+                    {document.category || "Uncategorized"}
                   </span>
                 </td>
 
                 <td className="px-4 py-5 align-top">
                   <span className="text-sm text-[var(--color-foreground)]">
-                    {document.fileType}
+                    {document.fileType || "File"}
                   </span>
                 </td>
 
                 <td className="px-4 py-5 align-top">
                   <span className="text-sm text-[var(--color-foreground)]">
-                    {document.uploadedAtLabel}
+                    {formatDate(document.createdAt)}
                   </span>
                 </td>
 
                 <td className="px-4 py-5 align-top">
                   <span className="text-sm text-[var(--color-foreground)]">
-                    {document.fileSizeLabel}
+                    {formatFileSize(document.fileSizeBytes)}
                   </span>
                 </td>
 

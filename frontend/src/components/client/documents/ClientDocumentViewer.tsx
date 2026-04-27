@@ -1,11 +1,15 @@
-import type { ClientProjectDocument } from "../../../types/clientPortal";
+import type { ProjectDocument } from "../../../types/projectDocument";
+import { formatDate } from "../../../utils/formatDate";
+import { formatFileSize } from "../../../utils/formatFileSize";
 
 interface ClientDocumentViewerProps {
-  document: ClientProjectDocument;
+  document: ProjectDocument;
+  viewerUrl: string;
 }
 
 export default function ClientDocumentViewer({
   document,
+  viewerUrl,
 }: ClientDocumentViewerProps) {
   return (
     <section className="space-y-6">
@@ -25,7 +29,7 @@ export default function ClientDocumentViewer({
               </h2>
 
               <p className="max-w-3xl text-[14px] leading-7 text-[var(--color-muted)]">
-                {document.description}
+                {document.description || "No description provided."}
               </p>
             </div>
           </div>
@@ -36,7 +40,7 @@ export default function ClientDocumentViewer({
                 Category
               </p>
               <p className="mt-1 text-[13px] text-[var(--color-foreground)]">
-                {document.category}
+                {document.category || "Uncategorized"}
               </p>
             </div>
 
@@ -45,7 +49,7 @@ export default function ClientDocumentViewer({
                 Uploaded
               </p>
               <p className="mt-1 text-[13px] text-[var(--color-foreground)]">
-                {document.uploadedAtLabel}
+                {formatDate(document.createdAt)}
               </p>
             </div>
 
@@ -54,7 +58,8 @@ export default function ClientDocumentViewer({
                 File Info
               </p>
               <p className="mt-1 text-[13px] text-[var(--color-foreground)]">
-                {document.fileType} · {document.fileSizeLabel}
+                {document.fileType || "File"} ·{" "}
+                {formatFileSize(document.fileSizeBytes)}
               </p>
             </div>
           </div>
@@ -62,18 +67,37 @@ export default function ClientDocumentViewer({
       </div>
 
       <div className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/5">
-        <div className="border-b border-white/10 px-6 py-4">
+        <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
           <p className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted)]">
             Embedded Viewer
           </p>
+
+          {viewerUrl && (
+            <a
+              href={viewerUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-xs uppercase tracking-[0.16em] text-[var(--color-primary)]"
+            >
+              Open in New Tab
+            </a>
+          )}
         </div>
 
         <div className="h-[75vh] min-h-[700px] bg-black/20">
-          <iframe
-            title={document.title}
-            src={document.embedUrl}
-            className="h-full w-full border-0"
-          />
+          {viewerUrl ? (
+            <iframe
+              title={document.title}
+              src={viewerUrl}
+              className="h-full w-full border-0"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center px-6 text-center">
+              <p className="text-sm text-[var(--color-muted)]">
+                No document preview URL is available.
+              </p>
+            </div>
+          )}
         </div>
       </div>
     </section>

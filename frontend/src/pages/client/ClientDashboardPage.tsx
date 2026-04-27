@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { useClientAuth } from "../../hooks/useClientAuth";
 import { Navigate, useParams } from "react-router-dom";
 import ClientBillingPanel from "../../components/client/dashboard/ClientBillingPanel";
 import ClientDocumentsPanel from "../../components/client/dashboard/ClientDocumentsPanel";
@@ -5,19 +7,97 @@ import ClientOverviewCard from "../../components/client/dashboard/ClientOverview
 import ClientProgressTimeline from "../../components/client/dashboard/ClientProgressTimeline";
 import ClientSupportPanel from "../../components/client/dashboard/ClientSupportPanel";
 import ClientUpdatesPanel from "../../components/client/dashboard/ClientUpdatesPanel";
-import { clientProjectDetailsById } from "../../constants/clientPortalMockData";
+import { getProjectDetails } from "../../services/api/project/getProjectDetails/api";
+import type { AdminPortalProjectRecord } from "../../types/company";
 
 export default function ClientDashboardPage() {
   const { projectId } = useParams<{ projectId: string }>();
+  const { session } = useClientAuth();
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [project, setProject] = useState<AdminPortalProjectRecord | null>(null);
+
+  const accessToken = session?.access_token;
+
+  useEffect(() => {
+    async function loadProject() {
+      if (!accessToken) {
+        setError("No active client session found.");
+        setIsLoading(false);
+        return;
+      }
+
+      if (!projectId) {
+        setError("No project ID provided in URL.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        setError("");
+
+        const data = await getProjectDetails(accessToken, projectId);
+        setProject(data);
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : "Failed to load project.";
+        setError(message);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    loadProject();
+  }, [accessToken, projectId]);
 
   if (!projectId) {
     return <Navigate to="/client" replace />;
   }
 
-  const project = clientProjectDetailsById[projectId];
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
+        <section className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center">
+          <p className="text-sm uppercase tracking-[0.2em] text-[var(--color-muted)]">
+            Loading project dashboard...
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
+        <section className="mx-auto max-w-7xl rounded-3xl border border-red-400/20 bg-red-400/10 px-6 py-12 text-center">
+          <p className="text-sm uppercase tracking-[0.2em] text-red-200">
+            Failed to load project dashboard
+          </p>
+          <p className="mt-3 text-sm leading-7 text-red-100">{error}</p>
+        </section>
+      </main>
+    );
+  }
 
   if (!project) {
-    return <Navigate to="/client" replace />;
+    return (
+      <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
+        <section className="mx-auto max-w-7xl rounded-3xl border border-white/10 bg-white/5 px-6 py-12 text-center">
+          <h1
+            className="text-4xl uppercase"
+            style={{ fontFamily: "var(--font-display)" }}
+          >
+            Project Not Found
+          </h1>
+          <p className="mt-3 text-sm leading-7 text-[var(--color-muted)]">
+            We could not find this project. Please return to your projects page
+            and open the project again.
+          </p>
+        </section>
+      </main>
+    );
   }
 
   return (
@@ -48,7 +128,7 @@ export default function ClientDashboardPage() {
                 Project
               </p>
               <p className="mt-1 text-2xl font-medium text-[var(--color-foreground)]">
-                {project.summary.projectName}
+                {project.name}
               </p>
             </div>
           </div>
@@ -57,26 +137,28 @@ export default function ClientDashboardPage() {
         <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <ClientOverviewCard
             eyebrow="Website Status"
-            title={project.summary.websiteStatus}
+            title={project.status}
             description="This is the current overall state of your project inside our workflow."
           />
 
           <ClientOverviewCard
             eyebrow="Current Phase"
-            title={project.summary.currentPhase}
+            title={project.currentPhase || "No Phase"}
             description="This shows the stage your website is currently in right now."
           />
 
           <ClientOverviewCard
             eyebrow="Next Step"
-            title={project.summary.nextStep}
+            title={project.nextStep || "No Next Step"}
             description="This is the next action needed to keep the project moving smoothly."
           />
 
           <ClientOverviewCard
             eyebrow="Balance Due"
-            title={project.summary.balanceDue}
-            description={`Your next invoice is currently due on ${project.summary.invoiceDueDate}.`}
+            title={project.balanceDue || "No Balance"}
+            description={`Your next invoice is currently due on ${
+              project.invoiceDueDate || "No Due Date"
+            }.`}
           />
         </section>
 
@@ -88,11 +170,24 @@ export default function ClientDashboardPage() {
 
           <div className="space-y-6">
             <ClientDocumentsPanel documents={project.documents} />
-            <ClientBillingPanel billing={project.billing} />
+
+            {project.billing ? (
+              <ClientBillingPanel billing={project.billing} />
+            ) : (
+              <ClientBillingPanel
+                billing={{
+                  invoiceId: "No Invoice ID",
+                  invoiceLabel: "No Invoice Yet",
+                  status: "Not Started",
+                  amountDue: "$0.00",
+                  dueDate: "No Due Date",
+                }}
+              />
+            )}
           </div>
         </section>
 
-        <ClientSupportPanel support={project.support} />
+        <ClientSupportPanel />
       </section>
     </main>
   );

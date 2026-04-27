@@ -1,12 +1,4 @@
-import type { ClientSupportSummary } from "../../../types/clientPortal";
-
-interface ClientSupportPanelProps {
-  support: ClientSupportSummary;
-}
-
-export default function ClientSupportPanel({
-  support,
-}: ClientSupportPanelProps) {
+export default function ClientSupportPanel() {
   return (
     <section className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
       <div>
@@ -22,7 +14,7 @@ export default function ClientSupportPanel({
         </h2>
 
         <p className="mt-2 text-sm leading-7 text-[var(--color-muted)]">
-          Contact your project team if you have questions about files, billing,
+          Contact our project team if you have questions about files, billing,
           or next steps.
         </p>
       </div>
@@ -33,7 +25,7 @@ export default function ClientSupportPanel({
             Team
           </p>
           <p className="mt-2 text-sm leading-7 text-[var(--color-foreground)]">
-            {support.contactName}
+            Gequence Support Team
           </p>
         </div>
 
@@ -42,7 +34,7 @@ export default function ClientSupportPanel({
             Email
           </p>
           <p className="mt-2 text-sm leading-7 text-[var(--color-foreground)]">
-            {support.contactEmail}
+            support@gequence.com
           </p>
         </div>
 
@@ -51,7 +43,7 @@ export default function ClientSupportPanel({
             Phone
           </p>
           <p className="mt-2 text-sm leading-7 text-[var(--color-foreground)]">
-            {support.contactPhone}
+            (111) - 111 - 1111
           </p>
         </div>
 
@@ -60,7 +52,7 @@ export default function ClientSupportPanel({
             Office Hours
           </p>
           <p className="mt-2 text-sm leading-7 text-[var(--color-foreground)]">
-            {support.officeHours}
+            Mon - Fri, 9:00 AM - 5:00 PM
           </p>
         </div>
       </div>

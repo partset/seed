@@ -1,8 +1,10 @@
-import type { ClientProjectUpdate } from "../../../types/clientPortal";
+// import type { ClientProjectUpdate } from "../../../types/clientPortal";
+import type { ProjectUpdate } from "../../../types/projectUpdate";
+import { formatDate } from "../../../utils/formatDate";
 import ClientUpdateDescription from "./ClientUpdateDescription";
 
 interface ClientUpdatesTableProps {
-  updates: ClientProjectUpdate[];
+  updates: ProjectUpdate[];
 }
 
 export default function ClientUpdatesTable({
@@ -46,7 +48,7 @@ export default function ClientUpdatesTable({
 
                 <td className="w-[180px] px-4 py-5 align-top">
                   <div className="w-[180px] whitespace-normal text-sm text-[var(--color-foreground)]">
-                    {update.dateLabel}
+                    {formatDate(update.createdAt)}
                   </div>
                 </td>
               </tr>

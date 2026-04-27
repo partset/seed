@@ -35,10 +35,11 @@ export interface ClientProjectMilestone {
 }
 
 export interface ClientBillingSummary {
+  invoiceId: string | null;
   invoiceLabel: string;
+  status: string;
   amountDue: string;
   dueDate: string;
-  status: string;
 }
 
 export interface ClientSupportSummary {

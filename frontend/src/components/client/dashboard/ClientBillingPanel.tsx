@@ -7,6 +7,11 @@ interface ClientBillingPanelProps {
 export default function ClientBillingPanel({
   billing,
 }: ClientBillingPanelProps) {
+  const hasPayableInvoice =
+    billing.invoiceLabel !== "No Invoice Yet" &&
+    billing.status !== "Paid" &&
+    billing.amountDue !== "$0.00";
+
   return (
     <section className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
       <div className="mb-5 flex items-start justify-between gap-4">
@@ -76,7 +81,8 @@ export default function ClientBillingPanel({
           <div>
             <button
               type="button"
-              className="rounded-full border border-white/10 bg-[var(--color-primary)] px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-black transition hover:opacity-90"
+              disabled={!hasPayableInvoice}
+              className="rounded-full border border-white/10 bg-[var(--color-primary)] px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Pay Now
             </button>

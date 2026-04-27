@@ -1,10 +1,10 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import type { ClientProjectUpdate } from "../../../types/clientPortal";
+import type { ProjectUpdate } from "../../../types/projectUpdate";
 import ClientUpdatesTable from "../updates/ClientUpdatesTable";
 
 interface ClientUpdatesPanelProps {
-  updates: ClientProjectUpdate[];
+  updates: ProjectUpdate[];
 }
 
 export default function ClientUpdatesPanel({
@@ -23,7 +23,13 @@ export default function ClientUpdatesPanel({
   }, [updates]);
 
   function handleViewAllClick() {
-    navigate(`/client/${projectId}/updates`);
+    if (!projectId) return;
+
+    navigate(`/client/${projectId}/updates`, {
+      state: {
+        updates,
+      },
+    });
   }
 
   return (

@@ -15,6 +15,26 @@ function formatDateOnly(value) {
   return null;
 }
 
+function formatMoneyFromCents(amountCents, currency = "USD") {
+  if (amountCents === null || amountCents === undefined) {
+    return "$0.00";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency,
+  }).format(amountCents / 100);
+}
+
+function formatInvoiceStatus(status) {
+  if (!status) return "No Invoice";
+
+  return status
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 async function getProjectDetailsService(projectId) {
   const result = await db.query(getProjectDetailsQuery.getProjectDetails, [
     projectId,
@@ -23,6 +43,21 @@ async function getProjectDetailsService(projectId) {
   if (result.rows.length === 0) return null;
 
   const row = result.rows[0];
+
+  const invoiceDueDate = formatDateOnly(row.billing_due_date);
+
+  const billing = row.billing_invoice_id
+    ? {
+        invoiceId: row.billing_invoice_id,
+        invoiceLabel: row.billing_invoice_number,
+        status: formatInvoiceStatus(row.billing_status),
+        amountDue: formatMoneyFromCents(
+          row.billing_amount_cents,
+          row.billing_currency,
+        ),
+        dueDate: invoiceDueDate || "No Due Date",
+      }
+    : null;
 
   return {
     id: row.project_id,
@@ -36,6 +71,10 @@ async function getProjectDetailsService(projectId) {
     updates: row.updates,
     milestones: row.milestones,
     documents: row.documents,
+
+    balanceDue: billing ? billing.amountDue : null,
+    invoiceDueDate,
+    billing,
   };
 }
 
