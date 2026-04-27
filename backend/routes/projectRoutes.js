@@ -40,6 +40,9 @@ const {
 } = require("../validators/project/validateInsertProjectMilestone");
 const { requireSupabaseAuth } = require("../middleware/requireSupabaseAuth");
 const { requireAdmin } = require("../middleware/requireAdmin");
+const {
+  requireAdminOrClientCompanyAccess,
+} = require("../middleware/requireAdminOrClientCompanyAccess");
 const uploadProjectDocument = require("../middleware/uploadProjectDocument");
 
 const router = express.Router();
@@ -63,7 +66,7 @@ router.get(
 router.get(
   "/:companyId",
   requireSupabaseAuth,
-  requireAdmin,
+  requireAdminOrClientCompanyAccess,
   getProjectsByCompanyId,
 );
 
