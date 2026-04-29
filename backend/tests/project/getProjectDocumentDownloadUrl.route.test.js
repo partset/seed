@@ -1,12 +1,16 @@
 jest.mock("../../middleware/requireSupabaseAuth", () => ({
   requireSupabaseAuth: (req, res, next) => {
-    req.authUserId = "550e8400-e29b-41d4-a716-446655440002";
+    req.authUserId = "test-auth-user-id";
+    req.authUser = { id: "test-auth-user-id" };
     next();
   },
 }));
 
-jest.mock("../../middleware/requireAdmin", () => ({
-  requireAdmin: (req, res, next) => next(),
+jest.mock("../../middleware/requireAdminOrClientCompanyAccess", () => ({
+  requireAdminOrClientCompanyAccess: (req, res, next) => {
+    req.userRole = "admin";
+    next();
+  },
 }));
 
 jest.mock("../../controllers/project/getProjectDocumentDownloadUrl", () => ({

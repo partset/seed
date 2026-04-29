@@ -8,10 +8,14 @@ const clientRoutes = require("./routes/clientRoutes");
 const utilRoutes = require("./routes/utilRoutes");
 const companyRoutes = require("./routes/companyRoutes");
 const projectRoutes = require("./routes/projectRoutes");
+const stripeRoutes = require("./routes/stripeRoutes");
 
 const app = express();
 
 app.use(cors());
+
+app.use("/api/stripe", stripeRoutes);
+
 app.use(express.json());
 
 app.use("/api/lead", leadRoutes);
