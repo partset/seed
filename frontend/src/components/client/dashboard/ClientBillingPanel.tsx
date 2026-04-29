@@ -1,16 +1,31 @@
+import { Link } from "react-router-dom";
 import type { ClientBillingSummary } from "../../../types/clientPortal";
 
 interface ClientBillingPanelProps {
   billing: ClientBillingSummary;
+  projectId: string;
+}
+
+function normalizeStatus(status: string | null | undefined) {
+  return status?.trim().toLowerCase() ?? "";
 }
 
 export default function ClientBillingPanel({
   billing,
+  projectId,
 }: ClientBillingPanelProps) {
-  const hasPayableInvoice =
-    billing.invoiceLabel !== "No Invoice Yet" &&
-    billing.status !== "Paid" &&
-    billing.amountDue !== "$0.00";
+  const paymentPath = `/client/${projectId}/payment`;
+
+  const normalizedStatus = normalizeStatus(billing.status);
+
+  const hasInvoice = billing.invoiceLabel !== "No Invoice Yet";
+  const isPaid = normalizedStatus === "paid";
+  const hasAmountDue = billing.amountDue !== "$0.00";
+
+  const hasPayableInvoice = hasInvoice && !isPaid && hasAmountDue;
+
+  const amountDueLabel = isPaid ? "$0.00" : billing.amountDue;
+  const statusLabel = hasInvoice ? billing.status : "No Invoice";
 
   return (
     <section className="rounded-3xl border border-white/10 bg-white/5 p-5 md:p-6">
@@ -40,6 +55,7 @@ export default function ClientBillingPanel({
               <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
                 Current Invoice
               </p>
+
               <h3
                 className="mt-2 text-3xl uppercase"
                 style={{ fontFamily: "var(--font-display)" }}
@@ -52,8 +68,9 @@ export default function ClientBillingPanel({
               <p className="text-[10px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
                 Status
               </p>
+
               <p className="mt-1 text-sm text-[var(--color-foreground)]">
-                {billing.status}
+                {statusLabel}
               </p>
             </div>
           </div>
@@ -63,8 +80,9 @@ export default function ClientBillingPanel({
               <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
                 Amount Due
               </p>
+
               <p className="mt-2 text-xl text-[var(--color-foreground)]">
-                {billing.amountDue}
+                {amountDueLabel}
               </p>
             </div>
 
@@ -72,6 +90,7 @@ export default function ClientBillingPanel({
               <p className="text-[11px] uppercase tracking-[0.2em] text-[var(--color-muted)]">
                 Due Date
               </p>
+
               <p className="mt-2 text-xl text-[var(--color-foreground)]">
                 {billing.dueDate}
               </p>
@@ -79,13 +98,29 @@ export default function ClientBillingPanel({
           </div>
 
           <div>
-            <button
-              type="button"
-              disabled={!hasPayableInvoice}
-              className="rounded-full border border-white/10 bg-[var(--color-primary)] px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-black transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              Pay Now
-            </button>
+            {hasPayableInvoice ? (
+              <Link
+                to={paymentPath}
+                className="inline-flex rounded-full border border-white/10 bg-[var(--color-primary)] px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-black transition hover:opacity-90"
+              >
+                Pay Now
+              </Link>
+            ) : isPaid ? (
+              <Link
+                to={paymentPath}
+                className="inline-flex rounded-full border border-white/10 bg-white/5 px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-[var(--color-foreground)] transition hover:bg-white/10"
+              >
+                View Payment Details
+              </Link>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="rounded-full border border-white/10 bg-[var(--color-primary)] px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-black opacity-40 disabled:cursor-not-allowed"
+              >
+                No Invoice
+              </button>
+            )}
           </div>
         </div>
       </div>

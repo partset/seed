@@ -19,6 +19,9 @@ import ClientUpdatesPage from "./pages/client/ClientUpdatesPage";
 import AdminCompaniesPage from "./pages/admin/AdminCompaniesPage";
 import AdminProjectDetailsPage from "./pages/admin/AdminProjectDetailsPage";
 import AdminCompanyDetailsPage from "./pages/admin/AdminCompanyDetailsPage";
+import ClientPaymentPage from "./pages/client/ClientPaymentPage";
+import ClientCheckoutPage from "./pages/client/ClientCheckoutPage";
+import ClientPaymentConfirmationPage from "./pages/client/ClientPaymentConfirmationPage";
 
 function AdminAuthLayout() {
   return (
@@ -86,6 +89,18 @@ export default function App() {
             <Route
               path="/client/:projectId/updates"
               element={<ClientUpdatesPage />}
+            />
+            <Route
+              path="/client/:projectId/payment"
+              element={<ClientPaymentPage />}
+            />
+            <Route
+              path="/client/:projectId/payment/checkout"
+              element={<ClientCheckoutPage />}
+            />
+            <Route
+              path="/client/:projectId/payment/confirmation"
+              element={<ClientPaymentConfirmationPage />}
             />
           </Route>
         </Route>

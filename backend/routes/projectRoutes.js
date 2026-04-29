@@ -21,6 +21,12 @@ const {
   insertProjectMilestone,
 } = require("../controllers/project/insertProjectMilestone");
 const {
+  getProjectPaymentDetails,
+} = require("../controllers/project/getProjectPaymentDetails");
+const {
+  createProjectCheckoutSession,
+} = require("../controllers/project/createProjectCheckoutSession");
+const {
   validateProjectId,
 } = require("../validators/project/validateProjectId");
 const {
@@ -38,6 +44,12 @@ const {
 const {
   validateInsertProjectMilestone,
 } = require("../validators/project/validateInsertProjectMilestone");
+const {
+  validateProjectPaymentDetails,
+} = require("../validators/project/validateProjectPaymentDetails");
+const {
+  validateCreateProjectCheckoutSession,
+} = require("../validators/project/validateCreateProjectCheckoutSession");
 const { requireSupabaseAuth } = require("../middleware/requireSupabaseAuth");
 const { requireAdmin } = require("../middleware/requireAdmin");
 const {
@@ -61,6 +73,22 @@ router.get(
   requireAdminOrClientCompanyAccess,
   validateProjectId,
   getProjectDetails,
+);
+
+router.get(
+  "/:projectId/payment-details",
+  requireSupabaseAuth,
+  requireAdminOrClientCompanyAccess,
+  validateProjectPaymentDetails,
+  getProjectPaymentDetails,
+);
+
+router.post(
+  "/:projectId/payment/checkout-session",
+  requireSupabaseAuth,
+  requireAdminOrClientCompanyAccess,
+  validateCreateProjectCheckoutSession,
+  createProjectCheckoutSession,
 );
 
 router.get(

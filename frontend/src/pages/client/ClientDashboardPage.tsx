@@ -172,9 +172,13 @@ export default function ClientDashboardPage() {
             <ClientDocumentsPanel documents={project.documents} />
 
             {project.billing ? (
-              <ClientBillingPanel billing={project.billing} />
+              <ClientBillingPanel
+                billing={project.billing}
+                projectId={projectId}
+              />
             ) : (
               <ClientBillingPanel
+                projectId={projectId}
                 billing={{
                   invoiceId: "No Invoice ID",
                   invoiceLabel: "No Invoice Yet",

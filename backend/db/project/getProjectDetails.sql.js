@@ -17,6 +17,8 @@ module.exports = {
       B.invoice_id AS billing_invoice_id,
       B.invoice_number AS billing_invoice_number,
       B.amount_cents AS billing_amount_cents,
+      B.amount_paid_cents AS billing_amount_paid_cents,
+      B.balance_due_cents AS billing_balance_due_cents,
       B.currency AS billing_currency,
       B.due_date AS billing_due_date,
       B.status AS billing_status
@@ -82,6 +84,8 @@ module.exports = {
         I.id AS invoice_id,
         I.invoice_number,
         I.amount_cents,
+        I.amount_paid_cents,
+        COALESCE(I.balance_due_cents, I.amount_cents - I.amount_paid_cents) AS balance_due_cents,
         I.currency,
         I.due_date,
         I.status
@@ -90,9 +94,11 @@ module.exports = {
         AND I.status != 'void'
       ORDER BY 
         CASE 
-          WHEN I.status IN ('unpaid', 'overdue') THEN 1
-          WHEN I.status = 'paid' THEN 2
-          ELSE 3
+          WHEN I.status = 'overdue' THEN 1
+          WHEN I.status = 'unpaid' THEN 2
+          WHEN I.status = 'draft' THEN 3
+          WHEN I.status = 'paid' THEN 4
+          ELSE 5
         END,
         I.due_date ASC NULLS LAST,
         I.created_at DESC

@@ -51,8 +51,12 @@ async function getProjectDetailsService(projectId) {
         invoiceId: row.billing_invoice_id,
         invoiceLabel: row.billing_invoice_number,
         status: formatInvoiceStatus(row.billing_status),
+        rawStatus: row.billing_status,
+        invoiceAmountCents: row.billing_amount_cents,
+        amountPaidCents: row.billing_amount_paid_cents,
+        balanceDueCents: row.billing_balance_due_cents,
         amountDue: formatMoneyFromCents(
-          row.billing_amount_cents,
+          row.billing_balance_due_cents,
           row.billing_currency,
         ),
         dueDate: invoiceDueDate || "No Due Date",

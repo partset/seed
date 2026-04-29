@@ -33,5 +33,6 @@ export const checkClient = async (): Promise<CheckClientResponse> => {
   }
 
   console.log("data: ", data);
+  console.log("access: ", session.access_token);
   return data;
 };
