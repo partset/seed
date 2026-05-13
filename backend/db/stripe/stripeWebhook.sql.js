@@ -57,6 +57,7 @@ module.exports = {
     WHERE id = $1
     RETURNING
       id,
+      billing_plan_id,
       invoice_number,
       amount_cents,
       amount_paid_cents,
@@ -87,5 +88,18 @@ module.exports = {
     WHERE provider = 'stripe'
       AND provider_event_id = $1
     LIMIT 1;
+  `,
+
+  completeOneTimeBillingPlan: `
+    UPDATE billing_plans
+    SET status = 'completed'
+    WHERE id = $1
+      AND billing_type = 'one_time'
+      AND status = 'active'
+    RETURNING
+      id,
+      project_id,
+      billing_type,
+      status;
   `,
 };

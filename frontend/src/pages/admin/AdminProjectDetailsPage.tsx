@@ -6,6 +6,7 @@ import ProjectHeader from "../../components/admin/project-detail/ProjectHeader";
 import ProjectMetaForm from "../../components/admin/project-detail/ProjectMetaForm";
 import ProjectMilestonesSection from "../../components/admin/project-detail/ProjectMilestonesSection";
 import ProjectUpdatesSection from "../../components/admin/project-detail/ProjectUpdatesSection";
+import BillingSetupForm from "../../components/admin/project-detail/BillingSetupForm";
 import type { Company } from "../../types/company";
 import type { Project } from "../../types/project";
 import { getProjectDetails } from "../../services/api/project/getProjectDetails/api";
@@ -13,8 +14,14 @@ import { modifyProjectDetails } from "../../services/api/project/modifyProjectDe
 import { insertProjectUpdate } from "../../services/api/project/insertProjectUpdate/api";
 import { insertProjectDocument } from "../../services/api/project/insertProjectDocument/api";
 import { insertProjectMilestone } from "../../services/api/project/insertProjectMilestone/api";
+import { createProjectBillingSetup } from "../../services/api/project/createProjectBillingSetup/api";
 import type { AdminPortalProjectRecord } from "../../types/company";
 import type { ProjectMilestoneStatus } from "../../types/projectMilestone";
+import type {
+  BillingPlanStatus,
+  BillingType,
+  InvoiceStatus,
+} from "../../types/projectBillingSetup";
 
 type LocationState = {
   company?: Company;
@@ -60,6 +67,10 @@ export default function AdminProjectDetailsPage() {
   const [isAddingUpdate, setIsAddingUpdate] = useState(false);
   const [isUploadingDocument, setIsUploadingDocument] = useState(false);
   const [isAddingMilestone, setIsAddingMilestone] = useState(false);
+  const [isCreatingBillingSetup, setIsCreatingBillingSetup] = useState(false);
+  const [billingSetupError, setBillingSetupError] = useState("");
+  const [billingSetupSuccessMessage, setBillingSetupSuccessMessage] =
+    useState("");
 
   const [error, setError] = useState("");
   const [saveError, setSaveError] = useState("");
@@ -324,6 +335,74 @@ export default function AdminProjectDetailsPage() {
     }
   }
 
+  async function handleCreateBillingSetup(payload: {
+    billingType: BillingType;
+    totalAmountCents: number;
+    depositAmountCents: number | null;
+    currency: string;
+    startDate: string | null;
+    invoiceNumber: string;
+    invoiceAmountCents: number;
+    dueDate: string | null;
+    billingPlanStatus: BillingPlanStatus;
+    invoiceStatus: InvoiceStatus;
+  }) {
+    if (!accessToken) {
+      setBillingSetupError("No active admin session found.");
+      return;
+    }
+
+    if (!projectId || !project) {
+      setBillingSetupError("Project details are not ready.");
+      return;
+    }
+
+    try {
+      setIsCreatingBillingSetup(true);
+      setBillingSetupError("");
+      setBillingSetupSuccessMessage("");
+
+      const createdBillingSetup = await createProjectBillingSetup(
+        accessToken,
+        projectId,
+        {
+          billingPlan: {
+            billingType: payload.billingType,
+            totalAmountCents: payload.totalAmountCents,
+            monthlyAmountCents: null,
+            depositAmountCents: payload.depositAmountCents,
+            currency: payload.currency,
+            startDate: payload.startDate,
+            endDate: null,
+            status: payload.billingPlanStatus,
+          },
+          invoice: {
+            invoiceNumber: payload.invoiceNumber,
+            amountCents: payload.invoiceAmountCents,
+            dueDate: payload.dueDate,
+            invoiceStatus: payload.invoiceStatus,
+            periodStart: null,
+            periodEnd: null,
+          },
+        },
+      );
+
+      setBillingSetupSuccessMessage(
+        `Invoice ${createdBillingSetup.invoice.invoiceNumber} created successfully.`,
+      );
+
+      return createdBillingSetup;
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to create billing setup.";
+
+      setBillingSetupError(message);
+      setBillingSetupSuccessMessage("");
+    } finally {
+      setIsCreatingBillingSetup(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
@@ -403,6 +482,23 @@ export default function AdminProjectDetailsPage() {
             isSaving={isSaving}
             saveError={saveError}
             saveSuccessMessage={saveSuccessMessage}
+          />
+
+          {billingSetupError && (
+            <p className="rounded-2xl border border-[var(--color-error-border)] bg-[var(--color-error)]/10 px-4 py-3 text-sm text-[var(--color-error)]">
+              {billingSetupError}
+            </p>
+          )}
+
+          {billingSetupSuccessMessage && (
+            <p className="rounded-2xl border border-[var(--color-success)]/40 bg-[var(--color-success)]/10 px-4 py-3 text-sm text-[var(--color-success)]">
+              {billingSetupSuccessMessage}
+            </p>
+          )}
+
+          <BillingSetupForm
+            isCreatingBillingSetup={isCreatingBillingSetup}
+            onCreateBillingSetup={handleCreateBillingSetup}
           />
 
           {updateError && (

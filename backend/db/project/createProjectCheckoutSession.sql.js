@@ -34,15 +34,14 @@ module.exports = {
     WHERE p.id = $1
       AND ($2::uuid IS NULL OR i.id = $2::uuid)
       AND bp.status IN ('active', 'draft', 'paused')
-      AND i.status IN ('unpaid', 'overdue', 'draft')
+      AND i.status IN ('unpaid', 'overdue')
       AND COALESCE(i.balance_due_cents, i.amount_cents - i.amount_paid_cents) > 0
 
     ORDER BY
       CASE i.status
         WHEN 'overdue' THEN 1
         WHEN 'unpaid' THEN 2
-        WHEN 'draft' THEN 3
-        ELSE 4
+        ELSE 3
       END,
       i.due_date ASC NULLS LAST,
       i.created_at DESC
