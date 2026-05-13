@@ -127,10 +127,23 @@ async function handleCheckoutSessionCompleted(event) {
 
   const updatedPayment = updatedPaymentResult.rows[0];
 
-  await db.query(stripeWebhookQueries.updateInvoiceAfterPayment, [
-    updatedPayment.invoice_id,
-    updatedPayment.amount_cents,
-  ]);
+  const updatedInvoiceResult = await db.query(
+    stripeWebhookQueries.updateInvoiceAfterPayment,
+    [updatedPayment.invoice_id, updatedPayment.amount_cents],
+  );
+
+  const updatedInvoice = updatedInvoiceResult.rows[0];
+
+  if (
+    updatedInvoice &&
+    updatedInvoice.status === "paid" &&
+    Number(updatedInvoice.balance_due_cents) === 0 &&
+    updatedInvoice.billing_plan_id
+  ) {
+    await db.query(stripeWebhookQueries.completeOneTimeBillingPlan, [
+      updatedInvoice.billing_plan_id,
+    ]);
+  }
 
   await insertPaymentEvent({
     paymentId: updatedPayment.id,

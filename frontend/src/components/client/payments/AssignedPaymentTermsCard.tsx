@@ -77,10 +77,11 @@ export default function AssignedPaymentTermsCard({
   checkoutPath,
 }: AssignedPaymentTermsCardProps) {
   const billingPlan = paymentDetails.billingPlan;
+  const payableStatuses = ["unpaid", "overdue"];
+
   const hasPayableInvoice =
     paymentDetails.invoice &&
-    paymentDetails.invoice.status !== "paid" &&
-    paymentDetails.invoice.status !== "void" &&
+    payableStatuses.includes(paymentDetails.invoice.status) &&
     paymentDetails.invoice.balanceDueCents > 0;
 
   return (
@@ -138,7 +139,9 @@ export default function AssignedPaymentTermsCard({
           disabled
           className="mt-8 inline-flex w-full cursor-not-allowed items-center justify-center rounded-[2px] border border-white/10 px-4 py-3 text-center text-[12px] uppercase tracking-[0.18em] text-[var(--color-muted)] opacity-50"
         >
-          No Payable Invoice
+          {paymentDetails.invoice?.status === "draft"
+            ? "Invoice Not Yet Issued"
+            : "No Payable Invoice"}
         </button>
       )}
     </section>

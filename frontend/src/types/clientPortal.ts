@@ -40,6 +40,8 @@ export interface ClientBillingSummary {
   status: string;
   amountDue: string;
   dueDate: string;
+  rawStatus: string;
+  balanceDueCents: number;
 }
 
 export interface ClientSupportSummary {

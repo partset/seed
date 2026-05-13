@@ -48,11 +48,11 @@ export default function CheckoutMockForm({
     : "No Billing Plan";
 
   const balanceDueLabel = formatCurrency(invoice?.balanceDueCents, currency);
+  const payableStatuses = ["unpaid", "overdue"];
 
   const hasPayableInvoice =
     invoice &&
-    invoice.status !== "paid" &&
-    invoice.status !== "void" &&
+    payableStatuses.includes(invoice.status) &&
     invoice.balanceDueCents > 0;
 
   const isMonthlyPayment = billingPlan?.billingType === "monthly";
@@ -81,10 +81,14 @@ export default function CheckoutMockForm({
     }
 
     if (!hasPayableInvoice) {
+      if (invoice.status === "draft") {
+        setCheckoutError("This invoice has not been issued yet.");
+        return;
+      }
+
       setCheckoutError("This invoice does not have a payable balance.");
       return;
     }
-
     if (isMonthlyPayment) {
       setCheckoutError("Monthly recurring payments are not supported yet.");
       return;
@@ -185,7 +189,9 @@ export default function CheckoutMockForm({
 
         {!hasPayableInvoice ? (
           <div className="rounded-2xl border border-white/10 bg-black/20 p-4 text-sm text-[var(--color-muted)]">
-            There is no payable invoice for this project right now.
+            {invoice?.status === "draft"
+              ? "This invoice has not been issued yet. Please check back once it has been finalized."
+              : "There is no payable invoice for this project right now."}
           </div>
         ) : null}
 

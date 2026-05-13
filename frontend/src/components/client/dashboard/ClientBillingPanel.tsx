@@ -16,13 +16,16 @@ export default function ClientBillingPanel({
 }: ClientBillingPanelProps) {
   const paymentPath = `/client/${projectId}/payment`;
 
-  const normalizedStatus = normalizeStatus(billing.status);
+  const normalizedStatus = normalizeStatus(billing.rawStatus || billing.status);
 
   const hasInvoice = billing.invoiceLabel !== "No Invoice Yet";
   const isPaid = normalizedStatus === "paid";
   const hasAmountDue = billing.amountDue !== "$0.00";
 
-  const hasPayableInvoice = hasInvoice && !isPaid && hasAmountDue;
+  const payableStatuses = ["unpaid", "overdue"];
+
+  const hasPayableInvoice =
+    hasInvoice && payableStatuses.includes(normalizedStatus) && hasAmountDue;
 
   const amountDueLabel = isPaid ? "$0.00" : billing.amountDue;
   const statusLabel = hasInvoice ? billing.status : "No Invoice";
@@ -118,7 +121,7 @@ export default function ClientBillingPanel({
                 disabled
                 className="rounded-full border border-white/10 bg-[var(--color-primary)] px-5 py-3 text-sm font-medium uppercase tracking-[0.12em] text-black opacity-40 disabled:cursor-not-allowed"
               >
-                No Invoice
+                {normalizedStatus === "draft" ? "Not Yet Issued" : "No Invoice"}
               </button>
             )}
           </div>

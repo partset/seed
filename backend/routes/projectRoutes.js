@@ -27,6 +27,12 @@ const {
   createProjectCheckoutSession,
 } = require("../controllers/project/createProjectCheckoutSession");
 const {
+  createProjectBillingSetup,
+} = require("../controllers/project/createProjectBillingSetup");
+const {
+  cancelProjectBillingPlan,
+} = require("../controllers/project/cancelProjectBillingPlan");
+const {
   validateProjectId,
 } = require("../validators/project/validateProjectId");
 const {
@@ -50,6 +56,12 @@ const {
 const {
   validateCreateProjectCheckoutSession,
 } = require("../validators/project/validateCreateProjectCheckoutSession");
+const {
+  validateCreateProjectBillingSetup,
+} = require("../validators/project/validateCreateProjectBillingSetup");
+const {
+  validateCancelProjectBillingPlan,
+} = require("../validators/project/validateCancelProjectBillingPlan");
 const { requireSupabaseAuth } = require("../middleware/requireSupabaseAuth");
 const { requireAdmin } = require("../middleware/requireAdmin");
 const {
@@ -65,6 +77,14 @@ router.get(
   requireAdminOrClientCompanyAccess,
   validateProjectDocumentDownloadUrl,
   getProjectDocumentDownloadUrl,
+);
+
+router.patch(
+  "/:projectId/billing-plan/:billingPlanId/cancel",
+  requireSupabaseAuth,
+  requireAdmin,
+  validateCancelProjectBillingPlan,
+  cancelProjectBillingPlan,
 );
 
 router.get(
@@ -89,6 +109,14 @@ router.post(
   requireAdminOrClientCompanyAccess,
   validateCreateProjectCheckoutSession,
   createProjectCheckoutSession,
+);
+
+router.post(
+  "/:projectId/billing-setup",
+  requireSupabaseAuth,
+  requireAdmin,
+  validateCreateProjectBillingSetup,
+  createProjectBillingSetup,
 );
 
 router.get(

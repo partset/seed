@@ -100,6 +100,30 @@ export default function ClientDashboardPage() {
     );
   }
 
+  const normalizedBillingStatus =
+    project.billing?.rawStatus?.toLowerCase() ?? "";
+
+  const payableStatuses = ["unpaid", "overdue"];
+
+  const hasIssuedPayableInvoice =
+    project.billing &&
+    payableStatuses.includes(normalizedBillingStatus) &&
+    (project.billing.balanceDueCents ?? 0) > 0;
+
+  const balanceOverviewTitle = hasIssuedPayableInvoice
+    ? (project.billing?.amountDue ?? "$0.00")
+    : "$0.00";
+
+  const balanceOverviewDescription = hasIssuedPayableInvoice
+    ? `Your next invoice is currently due on ${
+        project.invoiceDueDate || "No Due Date"
+      }.`
+    : normalizedBillingStatus === "draft"
+      ? "Your invoice has not been issued yet."
+      : normalizedBillingStatus === "paid"
+        ? "Your current invoice has been paid."
+        : "There is no payable invoice right now.";
+
   return (
     <main className="min-h-screen bg-[var(--color-background-dark)] px-6 py-10 text-[var(--color-foreground)] md:px-10">
       <section className="mx-auto max-w-7xl space-y-8">
@@ -155,10 +179,8 @@ export default function ClientDashboardPage() {
 
           <ClientOverviewCard
             eyebrow="Balance Due"
-            title={project.balanceDue || "No Balance"}
-            description={`Your next invoice is currently due on ${
-              project.invoiceDueDate || "No Due Date"
-            }.`}
+            title={balanceOverviewTitle}
+            description={balanceOverviewDescription}
           />
         </section>
 
@@ -180,9 +202,11 @@ export default function ClientDashboardPage() {
               <ClientBillingPanel
                 projectId={projectId}
                 billing={{
-                  invoiceId: "No Invoice ID",
+                  invoiceId: null,
                   invoiceLabel: "No Invoice Yet",
                   status: "Not Started",
+                  rawStatus: "not_started",
+                  balanceDueCents: 0,
                   amountDue: "$0.00",
                   dueDate: "No Due Date",
                 }}
